@@ -13,7 +13,8 @@ from docx import Document
 '''
 
 # 获取文档源
-path = 'C:\\Users\\420\\Desktop\\kdgc\\中国电信新一代云网运营业务系统采控中心RES OPEN API接口规范-ITMS+专业分册（2021年试行版）.docx'
+# path = 'C:\\Users\\420\\Desktop\\kdgc\\中国电信新一代云网运营业务系统采控中心RES OPEN API接口规范-ITMS+专业分册（2021年试行版）.docx'
+path = r'C:\Users\420\Desktop\IPC接口测试\IP测试记录汇总20210715.docx'
 obj = Document(path)
 # 将所有文档标题对象存入列表，这里多此一举 转换为列表的目的是为了便于通过索引灵活获取当前标题的前后标题
 titles = [content for content in obj.paragraphs if str(content.style.name).startswith("Heading")]

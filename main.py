@@ -9,8 +9,16 @@ def print_hi(name):
     print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
 
+def test_recurve(count):
+    if count > 0:
+        print(f'递归前{count}')
+        test_recurve(count - 1)
+        print(f'递归后{count}')
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     print_hi('PyCharm')
+    test_recurve(3)
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
