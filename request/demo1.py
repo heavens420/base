@@ -1,4 +1,5 @@
 import requests
+import urllib.request as req
 
 # get请求传参 params为传参，json形式
 response = requests.get("http://httpbin.org/get", params={"id": "1"})
