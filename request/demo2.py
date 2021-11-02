@@ -6,19 +6,20 @@ import openpyxl as xl
     批量测试IP专业接口并将测试结果保存到excel
 '''
 
-URI = "136.192.124.177:30004"
+# URI = "136.192.124.177:30004"
+URI = "135.64.134.201:30040"
 headers = {
     'Content-Type': 'application/json;charset=UTF-8'
 }
 wb = xl.Workbook()
 ws = wb.active
 
-json_path = r''
+json_path = r'./西藏-考核-PON.json'
 
 
-def my_post(url, data):
+def my_request(method, url, data):
     # 此处用json=data  而不是data=data
-    r = requests.post(url=url, json=data, headers=headers)
+    r = requests.request(method=method, url=url, json=data, headers=headers)
     # r.encoding = 'utf-8'
     # 自动获取编码
     r.encoding = r.apparent_encoding
@@ -42,11 +43,17 @@ def get_api_info():
     for item in my_json['item']:
         json_list = list()
         name = item['name']
+        method = item['request']['method']
         url = str(item['request']['url']['raw']).replace("{{URI}}", URI)
         # url = f"http://{URI}/res/rpc/ctr/ip/switchbundleportquery"
-        params = item['request']['body']['raw']
+        if str(method).lower() == 'post':
+            url = url.split("?")[0] + "?"
+            params = item['request']['body']['raw']
+        else:
+            # params = {'deviceId': '101.248.0.94'}
+            params = url.split("?")[1]
         # data = {"extendInputParameter2": "[170.128.233.173]", "extendInputParameter1": "扩展入参1,预留扩展入参", "bundleId": ""}
-        result = my_post(url, params)
+        result = my_request(method, url, params)
         json_list.append(name)
         json_list.append(url)
         json_list.append(params)

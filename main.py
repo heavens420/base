@@ -19,10 +19,17 @@ def test_recurve(count):
         print(f'递归后{count}')
 
 
+def test1():
+    st = "http://{{URI}}/res/stn/staticroute/get?serialNo={{serialNo}}&deviceId={{deviceId}}&devicedIp={{devicedIp}}&destIP={{destIP}}&vpnName={{vpnName}}&extendInputParameterA={{extendInputParameterA}}&ex"
+    ss = st.split("?")[0]
+    print(ss)
+
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     print_hi('PyCharm')
-    # test_recurve(3)
 
+    # test_recurve(3)
+    # test1()
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
