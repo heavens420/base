@@ -2,7 +2,6 @@ from smtplib import SMTP_SSL
 from smtplib import SMTP
 from email.mime.text import MIMEText
 
-
 def sendMail(message, subject, sender_show, recipient_show, to_addrs, cc_show=''):
     '''
     :param message: str 邮件内容
@@ -16,7 +15,7 @@ def sendMail(message, subject, sender_show, recipient_show, to_addrs, cc_show=''
     # 填写真实的发邮件服务器用户名、密码
     user = 'heavens420@163.com'
     # user = '1808056378@qq.com'
-    password = 'VIJAZVONSXDJBTBP'
+    password = ''
     # password = 'QQbaby223'
     # 邮件内容
     msg = MIMEText(message, 'plain', _charset="utf-8")

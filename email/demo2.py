@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 
 
 username = "heavens420@163.com"
-passwd = "VIJAZVONSXDJBTBP"
+passwd = ""
 mail_server = "smtp.163.com"
 message = "nihao python  抄送测试"
 mail_receiver = 'zhaolx521@163.com, heavens420@163.com, zhao.longlong@ustcinfo.com'
