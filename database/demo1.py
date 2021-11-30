@@ -123,10 +123,34 @@ def update_many():
     print(count)
 
 
+def find_many_test1():
+    cursor, conn = con()
+    sql = "select * from table1"
+    many = cursor.execute(sql)
+    for item in many:
+        print(item)
+
+
+def execute_many_sql():
+    cursor, conn = con()
+
+    sql1 = "select * from table1 limit 2"
+    cursor.execute(sql1)
+    result = cursor.fetchall()
+    print(result)
+    sql2 = "select * from table1 limit 3"
+    cursor.execute(sql2)
+    result = cursor.fetchall()
+    print(result)
+    conn.close()
+
+
 if __name__ == '__main__':
     # find_one()
-    find_all()
+    # find_all()
     # find_by_key()
     # define_my_sql()
     # update_one()
     # update_many()
+    # find_many_test1()
+    execute_many_sql()
