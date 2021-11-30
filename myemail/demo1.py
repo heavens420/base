@@ -1,6 +1,6 @@
 from smtplib import SMTP_SSL
-from smtplib import SMTP
 from email.mime.text import MIMEText
+
 
 def sendMail(message, subject, sender_show, recipient_show, to_addrs, cc_show=''):
     '''
