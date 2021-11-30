@@ -6,6 +6,8 @@ import os
 '''
     v3: 优化代码结构 嗯对 仅此而已
 '''
+
+
 class ScanFile(object):
     def __init__(self, path, expr_time):
         # 相对当前时间而言的前一次文件信息列表
