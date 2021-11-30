@@ -43,6 +43,3 @@ with FTP() as ftp:
     ftp.storbinary('STOR ' + remote_path, file_path, buffer_size)
     ftp.set_debuglevel(0)
     # ftp.quit()
-
-# if __name__ == '__main__':
-#     ftp_test()
