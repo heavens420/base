@@ -10,45 +10,62 @@ from email.mime.application import MIMEApplication
 import pymysql
 
 '''
-    备份接口机服务器执行脚本
+    数据采集  备份接口机服务器执行脚本
 '''
 
 
+# 根据md5文件路径获取其父级全路径和系统编码
+def get_sys_path(path):
+    path_list = str(path).split("\\")
+    # 获取md5文件名称不包含全路径
+    md5_real_name = path_list[len(path_list) - 1]
+    # 获取系统编码
+    sys_id = path_list[len(path_list) - 2]
+    res = ""
+    for i in range(len(path_list) - 1):
+        res = os.path.join(res, path_list[i])
+    return res, md5_real_name, sys_id
+
+
 # 生成本地md5校验文件  和当前账期目录
-def gen_local_md5(data_type):
+def gen_local_md5(data_type, md5_path):
     now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     md5_file_name = str(now) + ".md5.txt"
-    cmd = f"md5sum -b * > ./{md5_file_name}"
+    # 获取系统路径和md5名称(不含全路径)
+    sys_path, md5_real_name, sys_id = get_sys_path(md5_path)
+    # 先进入到指定系统路径再生成md5文件 防止生成的md5文件带有全路径 便于和系统侧生成的md5比较
+    cmd = f" cd {sys_path}  && md5sum -b * > ./{md5_file_name}"
 
-    dir_name = gen_local_dir(data_type)
+    # 截取当前账期名称 20120909
+    reg = r"(20\d{12}).md5.txt"
+    upload_time = re.search(reg, md5_real_name).group(1)
+    dir_name = gen_local_dir(sys_path, sys_id, data_type, upload_time)
     if not os.path.isfile(md5_file_name):
         os.system(cmd)
-    if not os.path.isfile(now):
-        gen_local_dir(now)
-    return md5_file_name, dir_name
+    return md5_file_name, dir_name, upload_time
 
 
 # 根据当前时间生成账期目录
-def gen_local_dir(data_type):
-    # 当前时间
-    now = datetime.datetime.now()
+def gen_local_dir(sys_path, sys_id, data_type, now):
+    # 格式化当前字符串为日期
+    now = datetime.datetime.strptime(now, "%Y%m%d%H%M%S")
     # 当月第一天
     month_one = datetime.datetime(now.year, now.month, 1)
     # 本周第一天
     week_one = now - timedelta(days=now.weekday())
 
     # 获取备份周期
-    sql = f"select back_cycle from t_back_config where data_type_eng = f{data_type}"
+    sql = f"select back_cycle from t_back_config where data_type_eng = '{data_type}' and sys_name_eng = '{sys_id}' and status_cd = 0"
 
     dir_prefix = exec_sql_fetchone(sql)
     if dir_prefix == '日':
-        prefix = 'D'
+        prefix = '1D'
         local_dir = now.strftime("%Y%m%d000000")
     elif dir_prefix == '周':
-        prefix = 'W'
+        prefix = '1W'
         local_dir = week_one.strftime("%Y%m%d000000")
     elif dir_prefix == '月':
-        prefix = 'M'
+        prefix = '1M'
         local_dir = month_one.strftime("%Y%m%d000000")
     else:
         # 比如说 3天 5天10天的情况
@@ -59,6 +76,8 @@ def gen_local_dir(data_type):
         local_dir = result_day.strftime('%Y%m%d000000')
         prefix = dir_prefix
     target_dir = prefix + local_dir
+    # 切换目录 创建账期文件夹
+    os.chdir(sys_path)
     os.mkdir(target_dir)
     return target_dir
 
@@ -67,6 +86,7 @@ def exec_sql_fetchall(sql):
     cursor, conn = con()
     cursor.execute(sql)
     lst = cursor.fetchall()
+    conn.close()
     return lst
 
 
@@ -74,6 +94,7 @@ def exec_sql_fetchone(sql):
     cursor, conn = con()
     cursor.execute(sql)
     one = cursor.fetchone()
+    conn.close()
     return one
 
 
@@ -83,6 +104,7 @@ def gen_data_type_dir():
     sql = f"select date_type_eng from t_back_config where create_time > DATE_SUB(NOW(),INTERVAL 25 HOUR) order by create_time desc;"
     cursor.execute(sql)
     date_list = cursor.fetchall()
+    conn.close()
     for item in date_list:
         if not os.path.exists(item):
             os.mkdir(item)
@@ -130,10 +152,14 @@ def send_email(to, title, message, file):
         smtp.sendmail(username, to, multipart.as_string())
 
 
-def write_upload_log(file_list):
+def write_upload_log(file_list, zq):
     cursor, conn = con()
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    # 获取当前路径父级名称 即sys_id
+    parent_path = os.path.dirname(os.getcwd())
+    sys_id = str(parent_path).split("/")[len(parent_path) - 1]
+    # 遍历上传成功的文件列表 添加日志
     for item in file_list:
         file_name = item[1]
         data_type = file_name.split(".")[0]
@@ -141,20 +167,22 @@ def write_upload_log(file_list):
         # result = os.popen(cmd)
         # size = result.read().split(" ")[0]
         size = os.path.getsize(file_name)
-        sql = f"select back_cycle,keep_time,data_type_chn from t_back_config where data_type_chn = {data_type}"
+        sql = f"select back_cycle,keep_time,data_type_eng from t_back_config where data_type_chn = '{data_type}' and sys_name_eng = '{sys_id}'"
         cursor.execute(sql)
         back_config = cursor.fetchone()
-        sql2 = f"insert into t_back_log(back_cycle,keep_time,data_type_chn,file_name,back_begin_date,file_size,status_cd,send_count) " \
-               f"values ({back_config[0]},{back_config[1]},{back_config[2]},{file_name},{str(now)},{size},1)"
+        sql2 = f"insert into t_back_log(back_cycle,keep_time,data_type_eng,file_name,back_begin_date,file_size,zq,status_cd,send_count) " \
+               f"values ('{back_config[0]}','{back_config[1]}','{back_config[3]}','{file_name}','{zq}','{str(now)}',{size},1) "
         cursor.execute(sql2)
     conn.close()
 
 
-def handle_check_success(file_list):
+# 遍历列表 逐个将文件上传到备份服务器
+def handle_check_success(file_list, local_dir, zq):
     for file in file_list:
-        cmd = f"scp ./{file[1]} xxx@xxxx:/xxx/"
+        cmd = f"scp ./{file[1]} xxx@xxxx:/xxx/{local_dir}/"
         os.system(cmd)
-    write_upload_log(file_list)
+    # 同时更新日志
+    write_upload_log(file_list, zq)
 
 
 class Collect(object):
@@ -174,20 +202,22 @@ class Collect(object):
         lines_list = self.read_file(md5_file)
 
         for item in lines_list:
-            file_item = str(item).replace("\n", "").replace("*", "").split(" ")
+            file_item = tuple(str(item).replace("\n", "").replace("*", "").split(" "))
             file_set.add(file_item)
         return file_set
 
     # 监控是否有md5文件生成 生成即认为已经完全收到所有文件
-    def monitor_file(self):
-        path = r'C:\Users\420\Desktop\source\DjangoFirst'
-        for root, dirs, files in os.walk(self.path):
+    def monitor_file(self, path):
+        for root, dirs, files in os.walk(path):
             for file in files:
                 reg = r'20\d{12}\.md5\.txt'
+                # reg = r'.*.pdf'
+
                 result = re.match(reg, file)
                 if result:
-                    # print(file)
-                    return file
+                    # 获取md5文件全路径
+                    full_file_path = os.path.join(root, file)
+                    return full_file_path
 
     # 将上传失败的文件名称写入文件
     def gen_file(self, diff_list, file_name):
@@ -220,9 +250,9 @@ class Collect(object):
 
         # 获取上传的md5文件信息列表
         md5_set = self.get_md5_set(md5_file)
-        data_type = str(md5_set[0][0]).split(".")[0]
-        # 获取本地生成的md5文件名称
-        local_md5_file, local_dir = gen_local_md5(data_type)
+        data_type = str(list(md5_set)[0][1]).split(".")[0]
+        # 获取本地生成的md5文件名称和账期文件夹
+        local_md5_file, local_dir, zq = gen_local_md5(data_type, md5_file)
 
         # 生成本地md5文件列表
         local_md5_set = self.get_md5_set(local_md5_file)
@@ -232,10 +262,10 @@ class Collect(object):
         # 如果只有部分文件校验成功则上传部分文件
         success_list = md5_set - compare_result
         # 先将账期空目录上传到备份服务器
-        cmd = f"scp -P 55555 -r {local_dir} xx@xx/xx/"
+        cmd = f"scp -P 55555 -r ./{local_dir} xx@xx/xx/"
         os.system(cmd)
         # 将系统侧所有上传的文件 复制到存储服务器
-        handle_check_success(success_list)
+        handle_check_success(success_list, local_dir, zq)
         # 最后上传重命名后的md5文件 备份服务器监控到改名后的md5文件则认为 备份文件接收完成
         cmd = f"scp ./{md5_file} xx@xx:/xx/upload-{md5_file}"
         os.system(cmd)
@@ -245,13 +275,22 @@ class Collect(object):
 
 
 if __name__ == '__main__':
-    c = Collect("./", "2")
+    c = Collect("./")
     # gen_local_md5()
     # monitor_file()
     # gen_local_dir("月")
+    # lss = c.get_md5_set("./md5.txt")
+    # print(lss)
 
+    res = get_sys_path(r"C:\Users\420\Desktop")
+    print(res)
+    time.sleep(1000)
     while 1:
-        file_name = c.monitor_file()
-        if file_name is not None:
-            time.sleep(30)
-            c.upload_files(file_name)
+        try:
+            file_name = c.monitor_file(r"C:\Users\420\Desktop")
+            if file_name is not None:
+                print(file_name)
+                time.sleep(30)
+            # c.upload_files(file_name)
+        except Exception as e:
+            print(e)

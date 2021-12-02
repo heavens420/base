@@ -9,7 +9,7 @@ from email.mime.application import MIMEApplication
 import pymysql
 
 '''
-    数据备份服务器上执行此脚本
+    数据采集  数据备份服务器上执行此脚本
 '''
 
 
@@ -28,8 +28,7 @@ def con():
 
 
 # 监控接口机上传的 20xxx.md5-upload.txt文件,同时删除20xxx.md5.txt文件
-def monitor_file():
-    path = r'C:\Users\420\Desktop\source\DjangoFirst'
+def monitor_file(path):
     for root, dirs, files in os.walk(path):
         for file in files:
             reg = r'20\d{12}\.md5-upload\.txt'
@@ -68,24 +67,26 @@ def gen_local_md5():
 
 
 # 备份完成的文件更新数据库记录
-def update_log(file_name):
+def update_log(file, sys_id):
     cursor, conn = con()
     finish_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    sql = f"update t_back_log set back_finish_date = {finish_date},status_cd = 0 where file_name = {file_name}"
+
+    sql = f"update t_back_log set back_finish_date = {finish_date},status_cd = 0 where file_name = {file}　and sys_name_eng = '{sys_id}'"
     cursor.execute(sql)
+    conn.commit()
     conn.close()
 
 
 # 处理校验失败的文件 重新到接口机拉取文件
 def handle_fail_files(fail_list):
     for file_name in fail_list:
-        cmd = f"scp xx@xx/xx/{file_name} /xx/xx/"
+        cmd = f"scp xx@xx:/upload/{file_name} /xx/xx/"
         os.system(cmd)
 
 
 # 删除校验成功的接口机上的对应文件
-def handle_success_files(file):
-    cmd = f"ssh xx@xx rm -fr xx/xx/{file}"
+def handle_success_files(file, sys_id):
+    cmd = f"ssh xx@xx rm -fr /upload/{sys_id}/{file}"
     os.system(cmd)
 
 
@@ -100,9 +101,14 @@ def compare_md5(md5_file):
     fail_set = md5_set - local_md5_set
     # 获取校验成功的文件信息
     success_set = md5_set - fail_set
+    # 获取当前目录全路径
+    current_path = os.getcwd().split("/")
+    # 　获取当前目录名称　非全路径 即系统编码
+    sys_id = current_path[len(current_path) - 1]
+
     for file in success_set:
-        update_log(file[1])
-        handle_success_files(file[1])
+        update_log(file[1], sys_id)
+        handle_success_files(file[1], sys_id)
 
     # 校验失败处理
     while fail_set != set():
@@ -121,16 +127,21 @@ def compare_md5(md5_file):
         # 将新的校验失败的文件列表赋值给 老的校验失败列表 用于循环判断
         fail_set = new_fail_set
         for item in new_success_set:
-            update_log(item[1])
-            handle_success_files(item[1])
+            update_log(item[1], sys_id)
+            handle_success_files(item[1], sys_id)
 
     # 比较结束 重命名接口机上传的md5文件名称 防止被二次扫描
-    now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    os.rename(md5_file, now + ".md5-release.txt")
+    # now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    os.rename(md5_file, str(md5_file).replace("upload", "release"))
 
 
 if __name__ == '__main__':
     while 1:
-        file = monitor_file()
+        file = monitor_file("/")
         if file is not None:
+            # 获取当前捕获的md5文件全路径
+            current_path = os.path.dirname(file)
+            # 进入到该路径
+            os.chdir(current_path)
+
             compare_md5(file)
