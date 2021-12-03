@@ -11,12 +11,12 @@ def path_join():
     print(rs)
 
 
-def test_and():
+def qtest_and():
     cmd = "echo 111 && echo 222"
     os.system(cmd)
 
 
-def test_format_date():
+def qtest_format_date():
     # print(datetime.datetime.strptime("%Y-%m-%d %H:%M:%S"))
     now = "20210909123456"
     now = datetime.datetime.strptime(now, "%Y%m%d%H%M%S")
@@ -24,7 +24,7 @@ def test_format_date():
     print(os.getcwd())
 
 
-def test_os():
+def qtest_os():
     # 获取当前文件目录
     print(os.getcwd())
 
@@ -39,7 +39,7 @@ def test_os():
     # print(os.getcwd())
 
 
-def test_group():
+def qtest_group():
     sss = "2020120909344455.md5.txt"
     reg = r"(20\d{12}).md5.txt"
     match = re.compile(reg)
@@ -49,7 +49,7 @@ def test_group():
         print("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh" * 1)
 
 
-def test_set():
+def qtest_set():
     aa = (1, 2)
     bb = (3, 4)
     ss = set()
@@ -64,8 +64,11 @@ if __name__ == '__main__':
     # sss = "1234567890"
     # ttt = sss[:3]
     # print(ttt)
+
+    print(os.system("ls"))
+
     # test_and()
     # test_format_date()
     # test_os()
-    test_group()
+    # test_group()
     # test_set()

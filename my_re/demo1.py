@@ -23,9 +23,10 @@ def test3():
     print(result)
     result = re.match(reg, ss)
     i = 0
-    while result:
-        i += 1
+    while result is not None:
         print(result.group(i))
+        i += 1
+
 
 
 def test2():
@@ -47,5 +48,5 @@ def test4():
 
 if __name__ == '__main__':
     # test1()
-    # test3()
-    test4()
+    test3()
+    # test4()

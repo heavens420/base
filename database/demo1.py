@@ -1,4 +1,5 @@
 import pymysql
+import os
 
 
 def con():
@@ -153,4 +154,13 @@ if __name__ == '__main__':
     # update_one()
     # update_many()
     # find_many_test1()
-    execute_many_sql()
+    # execute_many_sql()
+
+    lst = list()
+    for i in range(10):
+        try:
+            a = 1 / 0
+            lst.append(i)
+        except Exception as e:
+            print(e)
+    print(lst)

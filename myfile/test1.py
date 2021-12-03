@@ -41,7 +41,8 @@ def gen_local_md5(data_type, md5_path):
     upload_time = re.search(reg, md5_real_name).group(1)
     dir_name = gen_local_dir(sys_path, sys_id, data_type, upload_time)
     if not os.path.isfile(md5_file_name):
-        os.system(cmd)
+        result = os.system(cmd)
+        print(result)
     return md5_file_name, dir_name, upload_time
 
 
@@ -57,25 +58,30 @@ def gen_local_dir(sys_path, sys_id, data_type, now):
     # 获取备份周期
     sql = f"select back_cycle from t_back_config where data_type_eng = '{data_type}' and sys_name_eng = '{sys_id}' and status_cd = 0"
 
-    dir_prefix = exec_sql_fetchone(sql)
-    if dir_prefix == '日':
+    back_cycle = exec_sql_fetchone(sql)
+    if back_cycle is None or back_cycle == '':
+        print(f"找不到系统{sys_id}数据类型为{data_type}的备份周期")
+        return
+    if back_cycle == '日':
         prefix = '1D'
         local_dir = now.strftime("%Y%m%d000000")
-    elif dir_prefix == '周':
+    elif back_cycle == '周':
         prefix = '1W'
         local_dir = week_one.strftime("%Y%m%d000000")
-    elif dir_prefix == '月':
+    elif back_cycle == '月':
         prefix = '1M'
         local_dir = month_one.strftime("%Y%m%d000000")
     else:
+        month_one = month_one.strftime("%Y%m%d000000")
+        now = now.strftime("%Y%m%d000000")
         # 比如说 3天 5天10天的情况
         one_format = datetime.datetime.strptime(month_one, '%Y%m%d%H%M%S')
         now_format = datetime.datetime.strptime(now, '%Y%m%d%H%M%S')
-        sub_day = datetime.timedelta(days=(now_format - one_format).days % dir_prefix)
+        sub_day = datetime.timedelta(days=(now_format - one_format).days % back_cycle)
         result_day = now_format - sub_day
         local_dir = result_day.strftime('%Y%m%d000000')
-        prefix = dir_prefix
-    target_dir = prefix + local_dir
+        prefix = back_cycle
+    target_dir = str(prefix) + local_dir
     # 切换目录 创建账期文件夹
     os.chdir(sys_path)
     os.mkdir(target_dir)
@@ -112,14 +118,14 @@ def gen_data_type_dir():
 
 def con():
     host = 'jing.tk'
-    port = 3312
+    port = 3313
     username = 'root'
     passwd = 'ROOT#'
-    db = 'excel'
+    db = 'data_back'
     # with pymysql.connect(host=host, port=port, user=username, password=passwd, database=db, charset="utf8") as conn:
     conn = pymysql.connect(host=host, port=port, user=username, password=passwd, database=db, charset="utf8")
     # print(conn)
-    conn.select_db("excel")
+    conn.select_db("data_back")
     cursor = conn.cursor()
     return cursor, conn
 
@@ -186,8 +192,8 @@ def handle_check_success(file_list, local_dir, zq):
 
 
 class Collect(object):
-    def __init__(self, path):
-        self.path = path
+    def __init__(self):
+        # self.path = path
         # self.md5 = md5
         self.upload_fail_num = 0
 
@@ -275,7 +281,7 @@ class Collect(object):
 
 
 if __name__ == '__main__':
-    c = Collect("./")
+    c = Collect()
     # gen_local_md5()
     # monitor_file()
     # gen_local_dir("月")
@@ -284,13 +290,14 @@ if __name__ == '__main__':
 
     res = get_sys_path(r"C:\Users\420\Desktop")
     print(res)
-    time.sleep(1000)
+    # time.sleep(1000)
     while 1:
-        try:
-            file_name = c.monitor_file(r"C:\Users\420\Desktop")
-            if file_name is not None:
-                print(file_name)
-                time.sleep(30)
-            # c.upload_files(file_name)
-        except Exception as e:
-            print(e)
+        # try:
+        file_name = c.monitor_file(r"C:\Users\420\Desktop")
+        if file_name is not None:
+            print(file_name)
+            # time.sleep(30)
+        c.upload_files(file_name)
+        # except Exception as e:
+
+        # print(e)

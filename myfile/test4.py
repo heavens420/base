@@ -83,6 +83,10 @@ def handle_fail_file(file_list, content):
         os.system(cmd)
 
 
+def send_email():
+    pass
+
+
 def compare_md5(md5_file):
     # 获取本地生成的md5文件名称
     local_md5_file = gen_local_md5()
@@ -112,6 +116,7 @@ def compare_md5(md5_file):
 
     # 修改md5文件名，防止被二次扫描
     os.rename(md5_file, str(md5_file).replace(".md5-release.txt", ".md5-finish.txt"))
+    send_email()
 
 
 if __name__ == '__main__':
