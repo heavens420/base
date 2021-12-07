@@ -60,15 +60,22 @@ def qtest_set():
     # print(ss[0])
 
 
+def is_file():
+    print(os.getcwd())
+    sss = not os.path.isfile("demo1.py")
+    print(sss)
+
 if __name__ == '__main__':
     # sss = "1234567890"
     # ttt = sss[:3]
     # print(ttt)
 
-    print(os.system("ls"))
+    # print(os.system("ls"))
 
     # test_and()
     # test_format_date()
     # test_os()
     # test_group()
     # test_set()
+
+    is_file()

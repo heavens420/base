@@ -15,7 +15,6 @@ def con():
     username = 'root'
     passwd = 'ROOT#'
     db = 'data_back'
-    # with pymysql.connect(host=host, port=port, user=username, password=passwd, database=db, charset="utf8") as conn:
     conn = pymysql.connect(host=host, port=port, user=username, password=passwd, database=db, charset="utf8")
     # print(conn)
     conn.select_db("data_back")
@@ -38,8 +37,8 @@ def find_system():
 # 根据system code或编码查询系统账期
 def find_zq_by_sysid(sysid, data_type):
     cursor, conn = con()
-    sql = f"select log.zq from t_back_log log where log.sys_name_eng = '{sysid}'" \
-          f"and log.status_cd = 0 "
+    sql = f"select distinct log.zq from t_back_log log where log.sys_name_eng = '{sysid}'" \
+          f"and log.status_cd = 0 and log.zq is not null"
     print(sql)
     # 数据类型非空则作为查询条件
     if data_type != '':
@@ -47,9 +46,14 @@ def find_zq_by_sysid(sysid, data_type):
     cursor.execute(sql)
     zq_list = cursor.fetchall()
     conn.close()
+    if len(zq_list) == 0:
+        print(f"系统{sysid}无可用帐期！")
+        print()
+        return
     print(f"系统{sysid}的可用账期如下:")
     for item in zq_list:
         print(f"{item[0]}")
+    print()
 
 
 # 账期查询
@@ -65,7 +69,7 @@ def zq_query(promote):
             data_type = param[1]
         find_zq_by_sysid(sysid, data_type)
     else:
-        zq_query()
+        zq_query(promote)
     # 返回系统编码
     return param[0]
 
@@ -77,7 +81,7 @@ def write_release_log(file_list):
     cursor, conn = con()
     begin_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     for item in file_list:
-        sql = f"insert into t_release_log(md5,send_begin_date) values ('{item[0]}','{begin_date}')"
+        sql = f"insert into t_release_log(md5,send_begin_date) values ('{item[2]}','{begin_date}')"
         cursor.execute(sql)
     # 更改操作 要提交
     conn.commit()
@@ -88,7 +92,7 @@ def write_release_log(file_list):
 def release_file(sysid, zq):
     cursor, conn = con()
     # 根据系统编码和账期查询要下发的文件列表
-    sql = f"select log.data_type_eng,log.md5 from t_back_log log  where " \
+    sql = f"select log.back_cycle,log.data_type_eng,log.md5 from t_back_log log  where " \
           f"log.sys_name_eng = '{sysid}' and log.zq = '{zq}'"
     cursor.execute(sql)
     zq_list = cursor.fetchall()
@@ -100,9 +104,9 @@ def release_file(sysid, zq):
 
     if len(zq) == 14:
         # 根据账期截取 当前账期文件目录
-        zq_dir = zq[:9] + "000000"
+        zq_dir = zq_list[0][0] + zq[:8] + "000000"
         # 复制当前账期的整个文件夹到下发服务器
-        cmd = f"scp -r /xx/{sysid}/{zq_list[0][0]}/{zq_dir}/ xx@xx:/{sysid}/"
+        cmd = f"scp -P 54321 -r /usr/local/data_back/store/{sysid}/{zq_list[0][1]}/{zq_dir}/ root@jing.tk:/usr/local/my/download/{sysid}/"
         res = os.system(cmd)
         if res == 0:
             print(f"{sysid}系统的{zq}账期下发成功！")
@@ -137,7 +141,7 @@ def execute():
 
 if __name__ == '__main__':
     while 1:
-        try:
-            execute()
-        except Exception as e:
-            print(f"出现异常：{e}")
+        # try:
+        execute()
+        # except Exception as e:
+        #     print(f"出现异常：{e}")
