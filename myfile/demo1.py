@@ -25,16 +25,19 @@ def qtest_format_date():
 
 
 def qtest_os():
+    print()
     # 获取当前文件目录
     print(os.getcwd())
-
+    print()
     # 获取当前文件的绝对路径
     print(os.path.abspath(__file__))
+
+    print(os.path.abspath("./demo1.py"))
     # 打印当前路径的上级目录
     print(os.path.dirname(os.getcwd()))
     os.chdir("../")
     print(os.getcwd())
-    test_format_date()
+    qtest_format_date()
     # os.system("mkdir hhhhhhhhhhhhh")
     # print(os.getcwd())
 
@@ -74,8 +77,8 @@ if __name__ == '__main__':
 
     # test_and()
     # test_format_date()
-    # test_os()
+    qtest_os()
     # test_group()
     # test_set()
 
-    is_file()
+    # is_file()

@@ -1,3 +1,5 @@
+import time
+
 import pymysql
 import os
 import datetime
@@ -79,9 +81,9 @@ def zq_query(promote):
 # 更新下发记录
 def write_release_log(file_list):
     cursor, conn = con()
-    begin_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     for item in file_list:
-        sql = f"insert into t_release_log(md5,send_begin_date) values ('{item[2]}','{begin_date}')"
+        begin_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        sql = f"insert into t_release_log(file_name,md5,send_begin_date) values ('{item[3]}','{item[2]}','{begin_date}')"
         cursor.execute(sql)
     # 更改操作 要提交
     conn.commit()
@@ -92,7 +94,7 @@ def write_release_log(file_list):
 def release_file(sysid, zq):
     cursor, conn = con()
     # 根据系统编码和账期查询要下发的文件列表
-    sql = f"select log.back_cycle,log.data_type_eng,log.md5 from t_back_log log  where " \
+    sql = f"select log.back_cycle,log.data_type_eng,log.md5 ,log.file_name from t_back_log log  where " \
           f"log.sys_name_eng = '{sysid}' and log.zq = '{zq}'"
     cursor.execute(sql)
     zq_list = cursor.fetchall()
@@ -140,8 +142,7 @@ def execute():
 
 
 if __name__ == '__main__':
-    while 1:
-        # try:
+    try:
         execute()
-        # except Exception as e:
-        #     print(f"出现异常：{e}")
+    except Exception as e:
+        print(f"出现异常：{e}")

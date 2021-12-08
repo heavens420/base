@@ -25,13 +25,8 @@ def con():
 def monitor_file(path):
     for root, dirs, files in os.walk(path):
         for file in files:
-            reg = r'20\d{12}\.md5-release\.txt'
-            reg2 = r'20\d{12}\.md5\.txt'
+            reg = r'.*20\d{12}\.md5-release\.txt'
             result = re.match(reg, file)
-            result2 = re.match(reg2, file)
-            # 删除因校验失败而重新生成的md5文件
-            if result2:
-                os.remove(file)
             if result:
                 full_path_file = os.path.join(root, file)
                 return full_path_file
@@ -41,7 +36,7 @@ def monitor_file(path):
 def gen_local_md5():
     now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     md5_file_name = str(now) + ".md5.txt"
-    cmd = f"md5sum -b * > ./{md5_file_name}"
+    cmd = f"md5sum  * > ./{md5_file_name}"
     if not os.path.isfile(md5_file_name):
         os.system(cmd)
     return md5_file_name
@@ -59,7 +54,7 @@ def get_md5_set(md5_file):
     lines_list = read_file(md5_file)
 
     for item in lines_list:
-        file_item = str(item).replace("\n", "").replace("*", "").split(" ")
+        file_item = tuple(str(item).replace("\n", "").replace("*", "").split("  "))
         file_set.add(file_item)
     return file_set
 
@@ -67,19 +62,26 @@ def get_md5_set(md5_file):
 # 更新下发记录
 def write_release_log(file_list):
     cursor, conn = con()
-    finish_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     for item in file_list:
+        finish_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         sql = f"update t_back_log set send_count = send_count+1 where md5 = '{item[0]}'"
         sql2 = f"update t_release_log set send_finish_date = '{finish_date}' where md5 = '{item[0]}'"
-        cursor.executemany((sql, sql2))
+        cursor.execute(sql)
+        cursor.execute(sql2)
     # 更改操作 要提交
     conn.commit()
     conn.close()
 
 
 def handle_fail_file(file_list, content):
+    cursor, conn = con()
+    sql = f"select back_cycle from t_back_log where zq = '{content[2]}' limit 1"
+    cursor.execute(sql)
+    back_cycle = cursor.fetchone()
+
+    zq_dir = back_cycle[0] + content[2][:8] + "000000"
     for item in file_list:
-        cmd = f"scp /xx/{content[0]}/{content[1]}/{content[2]}/{item[1]}  /xx/{content[0]}/{content[2]}/"
+        cmd = f"scp -P 54321 root@jing.tk:/usr/local/my/upload/{content[0]}/{content[1]}/{zq_dir}/{item[1]}  ./"
         os.system(cmd)
 
 
@@ -101,32 +103,36 @@ def compare_md5(md5_file):
     # 校验成功的写日志
     write_release_log(check_success_list)
 
+    # 删除本地生成的md5文件
+    os.remove(local_md5_file)
+
     # 失败重新拉取文件重新校验直至成功
-    while check_fail_list != set():
-        # 获取备份服务器上 要重新拉取文件的路径
+    if check_fail_list != set():
+        # 获取备份服务器上要重新拉取文件的路径
         cursor, conn = con()
-        sql = f"select sys_name_eng,data_type_eng,zq from t_back_log where md5 = '{check_fail_list[0][0]}' limit 1"
+        sql = f"select sys_name_eng,data_type_eng,zq from t_back_log where md5 = '{list(check_fail_list)[0][0]}' limit 1"
         cursor.execute(sql)
         content = cursor.fetchone()
         conn.close()
         # 处理校验失败的文件
         handle_fail_file(check_fail_list, content)
         # 重新比较
-        compare_md5(check_fail_list)
+        compare_md5(md5_file)
 
     # 修改md5文件名，防止被二次扫描
-    os.rename(md5_file, str(md5_file).replace(".md5-release.txt", ".md5-finish.txt"))
-    send_email()
+    if os.path.isfile(md5_file):
+        os.rename(md5_file, str(md5_file).replace(".md5-release.txt", ".md5-finish.txt"))
+    # send_email()
 
 
 if __name__ == '__main__':
-    md5_file = monitor_file("/")
-    while md5_file is not None:
+    while 1:
         try:
-            md5_path = os.path.abspath(md5_file)
-            os.chdir(md5_path)
-
+            md5_file = monitor_file("/usr/local/data_back/")
+            if md5_file is not None:
+                current_path = os.path.dirname(md5_file)
+                os.chdir(current_path)
+                compare_md5(md5_file)
             time.sleep(30)
-            compare_md5(md5_file)
         except Exception as e:
             print(e)
