@@ -3,6 +3,10 @@ import datetime
 import pymysql
 import re
 import time
+from smtplib import SMTP_SSL
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.application import MIMEApplication
 
 '''
     数据下发功能 此脚本在下发服务器执行
@@ -73,20 +77,48 @@ def write_release_log(file_list):
     conn.close()
 
 
+# 处理校验失敗的文件
 def handle_fail_file(file_list, content):
     cursor, conn = con()
     sql = f"select back_cycle from t_back_log where zq = '{content[2]}' limit 1"
     cursor.execute(sql)
     back_cycle = cursor.fetchone()
 
+    # 獲取文件夾名稱
     zq_dir = back_cycle[0] + content[2][:8] + "000000"
+    # 遍歷 失敗文件列表 重新拉取文件
     for item in file_list:
         cmd = f"scp -P 54321 root@jing.tk:/usr/local/my/upload/{content[0]}/{content[1]}/{zq_dir}/{item[1]}  ./"
         os.system(cmd)
 
 
-def send_email():
-    pass
+# 发送邮件
+def send_email(to, title, message, file):
+    username = "heavens420@163.com"
+    passwd = "VIJAZVONSXDJBTBP"
+    mail_server = "smtp.163.com"
+    mail_port = 465
+
+    # to = "zhao.longlong@ustcinfo.com"
+
+    content_apart = MIMEText(message, "plain", _charset="utf-8")
+    multipart = MIMEMultipart()
+    multipart.attach(content_apart)
+    multipart['Subject'] = title
+    # 邮件发送者
+    multipart["From"] = username
+    # 邮件接收者
+    multipart["To"] = to
+
+    # 附件部分
+    if file is not None and file != '' and file != 'None':
+        text_apart = MIMEApplication(open(file, "rb").read())
+        text_apart.add_header("Content-Disposition", "attachment", filename=file)
+        multipart.attach(text_apart)
+
+    with SMTP_SSL(mail_server, mail_port) as smtp:
+        smtp.login(username, passwd)
+        smtp.sendmail(username, to, multipart.as_string())
 
 
 def compare_md5(md5_file):
@@ -106,14 +138,15 @@ def compare_md5(md5_file):
     # 删除本地生成的md5文件
     os.remove(local_md5_file)
 
+    # 获取备份服务器上要重新拉取文件的路径
+    cursor, conn = con()
+    sql = f"select sys_name_eng,data_type_eng,zq from t_back_log where md5 = '{list(md5_info_list)[0][0]}' limit 1"
+    cursor.execute(sql)
+    content = cursor.fetchone()
+    conn.close()
+
     # 失败重新拉取文件重新校验直至成功
     if check_fail_list != set():
-        # 获取备份服务器上要重新拉取文件的路径
-        cursor, conn = con()
-        sql = f"select sys_name_eng,data_type_eng,zq from t_back_log where md5 = '{list(check_fail_list)[0][0]}' limit 1"
-        cursor.execute(sql)
-        content = cursor.fetchone()
-        conn.close()
         # 处理校验失败的文件
         handle_fail_file(check_fail_list, content)
         # 重新比较
@@ -122,7 +155,11 @@ def compare_md5(md5_file):
     # 修改md5文件名，防止被二次扫描
     if os.path.isfile(md5_file):
         os.rename(md5_file, str(md5_file).replace(".md5-release.txt", ".md5-finish.txt"))
-    # send_email()
+
+        email_receiver = "zhaolx521@gmail.com"
+        title = f"數據下發成功通知"
+        message = f"{content[0]}系统{content[2]}帐期的数据下发成功，请及时拉取。数据将在72小时后自动删除。"
+        send_email(email_receiver, title, message, '')
 
 
 if __name__ == '__main__':

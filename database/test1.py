@@ -1,3 +1,5 @@
+#!/bin/env python
+
 import pymysql
 
 '''
@@ -8,10 +10,10 @@ import pymysql
 class Search:
     def __init__(self):
         self.__host = 'jing.tk'
-        self.__port = 3312
+        self.__port = 3313
         self.__username = 'root'
         self.__passwd = 'ROOT#'
-        self.__db = 'excel'
+        self.__db = 'data_back'
         self.table_name = ''
 
     # 创建数据库连接
@@ -23,7 +25,7 @@ class Search:
                                database=self.__db,
                                charset="utf8")
         # 选择操作的数据库
-        conn.select_db("excel")
+        conn.select_db("data_back")
         # 获取游标，参数的含义是使查询结果返回为json格式
         cursor = conn.cursor(cursor=pymysql.cursors.DictCursor)
         # cursor = conn.cursor()
@@ -44,7 +46,7 @@ class Search:
     def find_by_key(self, cursor, conn, table):
         try:
             # 输入查询的条件 key,value 形式 如果输入quit则正常退出当前程序
-            in_param = str(input("请输入要查的字段名称和字段值，空格分隔，如：id 2=>"))
+            in_param = str(input("请输入要查的字段名称和字段值，空格分隔，如：id 2 =>"))
             # 结束程序
             if in_param == 'quit' or in_param == 'exit':
                 cursor.close()
@@ -57,7 +59,7 @@ class Search:
             value = str(value).strip().lower()
 
             # 执行的sql语句
-            sql = f"select * from {table} where {key} = {value}"
+            sql = f"select * from {table} where {key} = '{value}'"
             # 执行查询操作
             cursor.execute(sql)
         except Exception as e:
@@ -119,21 +121,23 @@ class Search:
     # 打印表格字段信息
     def table_title(self, search_type):
         # t_sys表字段信息
-        t_sys_list = [{'字段名': '字段描述'}, {'id': '自增主键'}, {'sys_name': '系统名称'}, {'back_type': '备份方式'},
-                      {'back_cycle': '备份周期'},
-                      {'duration': '保存时长'}]
+        t_sys_list = [{'字段名': '字段描述'}, {'id': '自增主键'}, {'sys_name_chn': '系统中文名称'}, {'sys_name_eng': '系统英文名称'},
+                      {'data_type_chn': '数据类型中文名称'},
+                      {'data_type_eng': '数据类型英文名称'}, {'back_cycle': '备份周期'}, {'keep_time': '保存周期数'},
+                      {'status_cd': '是否有效'}, {'create_time': '创建时间'}]
         # t_back_log表字段信息
-        t_back_log_list = [{'字段名': '字段描述'}, {'id': '自增主键'}, {'sys_name': '系统名称'}, {'back_cycle': '备份周期'},
-                           {'back_date': '备份时间'}, {'file_size': '文件大小'},
-                           {'collect_date': '采集时间'}, {'finish_date': '采集完成时间'}, {'file_num': '备份文件数量'},
-                           {'check_failed_num': '校验失败数量'}, {'status_cd': '文件是否过期'}]
+        t_back_log_list = [{'字段名': '字段描述'}, {'id': '自增主键'}, {'sys_name_eng': '系统英文名称'}, {'data_type_eng': '数据类型英文名称'},
+                           {'back_cycle': '备份周期'}, {'keep_time': '保存周期数'},
+                           {'back_begin_date': '备份开始时间'}, {'back_finish_date': '备份结束时间'}, {'file_size': '文件大小'},
+                           {'zq': '文件所属账期'}, {'md5': '文件md5'}, {'send_count': '下发次数'}, {'status_cd': '文件是否过期'}]
+        t_release_log_list = [{'file_name':'文件名称'},{'md5':'文件md5'},{'send_begin_date':'下发开始时间'},{'send_finish_date':'下发完成时间'}]
         # 要打印的表字段信息
         target_list = []
         # 不同功能的不同提示语
         if search_type == '1' or search_type == '':
             # 为1 或者直接回车情况
             search_type = '1'
-            table = str(input("请输入要查看的表名(输入回车跳过此步骤)=>"))
+            table = str(input("请输入要查看的表字段信息(输入回车跳过此步骤)=>"))
         else:
             # 其它情况
             table = str(input("请输入要查询的表名=>"))
@@ -147,10 +151,12 @@ class Search:
             print(f"您输入的表名为:{table}")
 
         # 输入不同表名 打印不同表信息
-        if table == 't_sys':
+        if table == 't_back_config':
             target_list = t_sys_list
         elif table == 't_back_log':
             target_list = t_back_log_list
+        elif table == 't_release_log':
+            target_list = t_release_log_list
         # 未输入表名
         elif table == '':
             # 且选择的不是自定义sql功能
@@ -166,7 +172,7 @@ class Search:
 
     # 可查看或查询的表名列表
     def table_list(self):
-        lst = [{'表名': '描述'}, {'t_sys': '系统清单表'}, {'t_back_log': '备份记录表'}, {'t_release': '数据下发表'}]
+        lst = [{'表名': '描述'}, {'t_back_config': '系统配置表'}, {'t_back_log': '备份记录表'}, {'t_release_log': '下发记录表'}]
         self.for_dict(lst)
 
     # 打印字典值
@@ -178,13 +184,15 @@ class Search:
     # 功能执行选择入口
     def exec_sql(self):
         # 可执行的功能代号
-        search_type = str(input("请输入以下序号，默认为1\n1：自定义sql查询\n2：输入参数单表查询\n"))
+        search_type = str(input("请输入以下序号，默认为1\n1：自定义sql查询\n2：输入参数单表查询\n3：退出"))
         if search_type == '1' or search_type.strip() == '':
             print(f"您选择的是1：自定义sql查询")
             self.exec_define_sql(search_type)
         elif search_type == '2':
             print("您选择的是2：输入参数单表查询")
             self.exec_find_by_key(search_type)
+        elif search_type == '3':
+            return
         else:
             # raise Exception("输入有误，请重新输入")
             print("输入有误，请重新输入")

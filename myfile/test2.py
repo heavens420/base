@@ -2,7 +2,6 @@ import os
 import re
 import datetime
 import time
-from datetime import timedelta
 from smtplib import SMTP_SSL
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -55,9 +54,8 @@ def send_email(to, title, message, file):
         smtp.login(username, passwd)
         smtp.sendmail(username, to, multipart.as_string())
 
-    # 将上传失败的文件名称写入文件
 
-
+# 将上传失败的文件名称写入文件
 def gen_file(diff_list, file_name):
     with open(file_name, "a+") as file:
         for item in diff_list:

@@ -57,13 +57,14 @@ def send_email(to, title, message, file):
 def gen_report(today):
     # now = datetime.datetime.strptime(today,"%Y-%m-%d %H:%M:%S")
     now = today
-    this_mon = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    last_week_mon = this_mon - timedelta(days=7)
+    this_one_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    last_one_of_month = (this_one_of_month - timedelta(days=10)).replace(day=1)
+
     cursor, conn = con()
     sql = f"select con.sys_name_chn,con.data_type_chn,con.back_cycle,con.keep_time,log.file_name,log.back_finish_date,con.keep_time," \
           f"log.file_size from t_back_config con inner join t_back_log log on con.sys_name_eng = log.sys_name_eng " \
           f"where con.status_cd = 0 and log.status_cd = 0 " \
-          f"and log.back_finish_date < '{this_mon}' and log.back_finish_date > '{last_week_mon}'" \
+          f"and log.back_finish_date < '{this_one_of_month}' and log.back_finish_date > '{last_one_of_month}'" \
           f"order by con.sys_name_chn,con.data_type_chn,log.back_finish_date,log.file_size "
 
     print(sql)
@@ -71,19 +72,18 @@ def gen_report(today):
     result_list = cursor.fetchall()
     conn.close()
 
-
     # 最终的csv文件列表
     result = []
     # csv文件名称
-    csv_file = "week_report.csv"
+    csv_file = "month_report.csv"
     # 保存前一个系统名称
     pre_sys = ''
     # 系统备份占用磁盘总量
     dh_total = 0
 
     if len(result_list) == 0:
-        with open(csv_file,"a+") as file:
-            file.write("本週無新增備份文件")
+        with open(csv_file, "a+") as file:
+            file.write("本月無新增備份文件")
         return csv_file
 
     for i in range(len(result_list)):
@@ -157,8 +157,8 @@ if __name__ == '__main__':
 
         csv_file = gen_report(today)
         mail_receiver = ""
-        title = f"{year}年{month}月系统备份周报"
-        message = "上周文件备份详情见附件"
+        title = f"{year}年{month}月系统备份月报"
+        message = "上月文件备份详情见附件"
         send_email(mail_receiver, title, message, csv_file)
         os.remove(csv_file)
     except Exception as e:
