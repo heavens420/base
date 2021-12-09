@@ -41,8 +41,12 @@ def gen_local_md5():
     now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     md5_file_name = str(now) + ".md5.txt"
     cmd = f"md5sum  * > ./{md5_file_name}"
-    if not os.path.isfile(md5_file_name):
-        os.system(cmd)
+    try:
+        if not os.path.isfile(md5_file_name):
+            os.system(cmd)
+    except Exception as e:
+        os.remove(md5_file_name)
+        print(f"生成md5文件異常：{e}")
     return md5_file_name
 
 
@@ -124,8 +128,17 @@ def send_email(to, title, message, file):
 def compare_md5(md5_file):
     # 获取本地生成的md5文件名称
     local_md5_file = gen_local_md5()
-    # 获取本地生成的md5信息列表
-    local_md5_info_list = get_md5_set(local_md5_file)
+
+    local_md5_info_list = set()
+    try:
+        # 获取本地生成的md5信息列表
+        local_md5_info_list = get_md5_set(local_md5_file)
+        # 删除本地生成的md5文件
+        os.remove(local_md5_file)
+    except Exception as e:
+        os.remove(local_md5_file)
+        print(f"讀取本地生成的md5文件異常：{e}")
+
     # 获取下发的md5文件信息列表
     md5_info_list = get_md5_set(md5_file)
     # 获取校验失败的文件信息集合
@@ -135,8 +148,7 @@ def compare_md5(md5_file):
     # 校验成功的写日志
     write_release_log(check_success_list)
 
-    # 删除本地生成的md5文件
-    os.remove(local_md5_file)
+
 
     # 获取备份服务器上要重新拉取文件的路径
     cursor, conn = con()

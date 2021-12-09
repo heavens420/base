@@ -84,10 +84,14 @@ def read_file(md5_file):
 # 处理md5文件 返回列表 包括文件名称和其md5值
 def get_md5_set(md5_file):
     file_set = set()
-    lines_list = read_file(md5_file)
-    for item in lines_list:
-        file_item = tuple(str(item).replace("\n", "").replace("*", "").split("  "))
-        file_set.add(file_item)
+    try:
+        lines_list = read_file(md5_file)
+        for item in lines_list:
+            file_item = tuple(str(item).replace("\n", "").replace("*", "").split("  "))
+            file_set.add(file_item)
+    except Exception as e:
+        # os.remove(md5_file)
+        print(f"讀取md5文件異常：{e}")
     return file_set
 
 
@@ -99,6 +103,7 @@ def gen_local_md5():
     try:
         os.system(cmd)
     except Exception as e:
+        os.remove(md5_file_name)
         print(f"生成本地md5文件异常：{e}")
     return md5_file_name
 
@@ -132,8 +137,16 @@ def handle_success_files(file, zq_dir, data_type, sys_id):
 def compare_md5(md5_file, fail_count=0):
     # 获取本地生成的md5文件名
     local_md5 = gen_local_md5()
-    # 获取本地md5信息列表
-    local_md5_set = get_md5_set(local_md5)
+    local_md5_set = set()
+    try:
+        # 获取本地md5信息列表
+        local_md5_set = get_md5_set(local_md5)
+        # 删除本地生成的md5文件
+        os.remove(local_md5)
+    except Exception as e:
+        os.remove(local_md5)
+        print(f"讀取本地生成的md5文件異常：{e}")
+
     # 获取上传的md5信息列表
     md5_set = get_md5_set(md5_file)
     # 获取校验失败的文件信息
@@ -156,8 +169,7 @@ def compare_md5(md5_file, fail_count=0):
         update_log(file[1], zq, sys_id)
         handle_success_files(file[1], zq_dir, data_type, sys_id)
 
-    # 删除本地生成的md5文件
-    os.remove(local_md5)
+
 
     # 校验失败处理
     while fail_set != set():
@@ -178,10 +190,18 @@ def compare_md5(md5_file, fail_count=0):
         time.sleep(60)
         # 重新拉取失败的文件
         handle_fail_files(fail_set, sys_id, data_type, zq_dir)
+
         # 重新生成md5文件
         new_local_md5 = gen_local_md5()
-        # 获取新的md5文件信息
-        new_local_md5_set = get_md5_set(new_local_md5)
+        new_local_md5_set = set()
+        try:
+            # 获取新的md5文件信息
+            new_local_md5_set = get_md5_set(new_local_md5)
+            os.remove(new_local_md5)
+        except Exception as e:
+            os.remove(new_local_md5)
+            print(f"讀取本地生成的md5文件異常：{e}")
+
         # 获取新的校验失败的文件列表
         new_fail_set = fail_set - new_local_md5_set
         # 获取新的校验成功的文件列表
@@ -191,7 +211,6 @@ def compare_md5(md5_file, fail_count=0):
         for item in new_success_set:
             update_log(item[1], zq, sys_id)
             handle_success_files(item[1], zq_dir, data_type, sys_id)
-        os.remove(new_local_md5)
 
     # 比较结束 重命名接口机上传的md5文件名称 防止被二次扫描
     # now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")

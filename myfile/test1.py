@@ -2,6 +2,7 @@ import os
 import re
 import time
 import datetime
+import traceback
 from datetime import timedelta
 from smtplib import SMTP_SSL
 from email.mime.text import MIMEText
@@ -31,27 +32,32 @@ def get_sys_path(path):
 def gen_local_md5(data_type, md5_path):
     now = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     md5_file_name = str(now) + ".md5.txt"
-    # 获取系统路径和md5名称和全路径
-    sys_path, md5_real_name, sys_id = get_sys_path(md5_path)
-    # 先进入到指定系统路径再生成md5文件 防止生成的md5文件带有全路径 便于和系统侧生成的md5比较
-    cmd = f"md5sum * > ./{md5_file_name}"
-
-    # 截取当前账期名称 20120909123456
-    reg = r"(20\d{12}).md5.txt"
-    upload_time = re.search(reg, md5_real_name).group(1)
-
-    print(os.getcwd())
-
+    dir_name = ''
     try:
+        # 获取系统路径和md5名称和全路径
+        sys_path, md5_real_name, sys_id = get_sys_path(md5_path)
+        # 先进入到指定系统路径再生成md5文件 防止生成的md5文件带有全路径 便于和系统侧生成的md5比较
+        cmd = f"md5sum * > ./{md5_file_name}"
+
+        # 截取当前账期名称 20120909123456
+        reg = r"(20\d{12}).md5.txt"
+        upload_time = re.search(reg, md5_real_name).group(1)
+
+        print(os.getcwd())
         if not os.path.isfile(md5_file_name):
             result = os.system(cmd)
-            print(result)
+            print(f"49:{result}")
+        dir_name = gen_local_dir(sys_id, data_type, upload_time)
+
+        return md5_file_name, dir_name, upload_time, sys_id
     except Exception as e:
+        traceback.print_exc()
+        # 出現異常 就刪除本地md5文件
+        os.remove(md5_file_name)
+        os.rmdir(dir_name)
         print(f"生成本地md5文件异常：{e}")
 
-    dir_name = gen_local_dir(sys_id, data_type, upload_time)
 
-    return md5_file_name, dir_name, upload_time, sys_id
 
 
 # 根据当前时间生成账期目录
@@ -71,13 +77,13 @@ def gen_local_dir(sys_id, data_type, now):
         print(f"找不到系统{sys_id}数据类型为{data_type}的备份周期")
         return
     if back_cycle == '日':
-        prefix = '1D'
+        prefix = 'D'
         local_dir = now.strftime("%Y%m%d000000")
     elif back_cycle == '周':
-        prefix = '1W'
+        prefix = 'W'
         local_dir = week_one.strftime("%Y%m%d000000")
     elif back_cycle == '月':
-        prefix = '1M'
+        prefix = 'M'
         local_dir = month_one.strftime("%Y%m%d000000")
     else:
         month_one = month_one.strftime("%Y%m%d000000")
@@ -168,7 +174,7 @@ def send_email(to, title, message, file):
         smtp.sendmail(username, to, multipart.as_string())
 
 
-def write_upload_log(file_list, sys_id,data_type,zq):
+def write_upload_log(file_list, sys_id, data_type, zq):
     cursor, conn = con()
     now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -196,7 +202,7 @@ def handle_check_success(file_list, sys_id, data_type, local_dir, zq):
         cmd = f"scp  -P 54321 ./{file[1]} root@jing.tk:/usr/local/my/upload/{sys_id}/{data_type}/{local_dir}/{file[1]}"
         os.system(cmd)
     # 同时更新日志
-    write_upload_log(file_list,sys_id,data_type, zq)
+    write_upload_log(file_list, sys_id, data_type, zq)
 
 
 class Collect(object):
@@ -244,7 +250,7 @@ class Collect(object):
                 file.write(name)
 
     # 处理MD5校验失败的文件
-    def handle_check_failed(self, diff_list,sys_id,zq):
+    def handle_check_failed(self, diff_list, sys_id, zq):
         # 上传失败的文件清单名称
         file_name = f'{sys_id}-{zq}.txt'
         # 生成校验失败文件清单
@@ -257,9 +263,9 @@ class Collect(object):
         # 删除生成的校验失败文件清单
         os.remove(file_name)
 
-    def is_exist_zq(self,sys_id,data_type,zq):
-        cursor,conn = con()
-        sql = f"select zq from t_back_log where sys_name_eng = '{sys_id}' and data_type_eng = '{data_type}' and zq = '{zq}' limit 1"
+    def is_exist_zq(self, sys_id, data_type, zq):
+        cursor, conn = con()
+        sql = f"select zq from t_back_log where sys_name_eng = '{sys_id}' and data_type_eng = '{data_type}' and zq = '{zq}' and status_cd = 0 limit 1"
         cursor.execute(sql)
         is_exist = cursor.fetchone()
         return is_exist
@@ -274,40 +280,59 @@ class Collect(object):
         # 获取上传的md5文件信息列表
         md5_set = self.get_md5_set(md5_file)
         data_type = str(list(md5_set)[len(md5_set) - 1][1]).split(".")[0]
-        # 获取本地生成的md5文件名称和账期文件夹
-        local_md5_file, local_dir, zq, sys_id = gen_local_md5(data_type, md5_file)
 
-        # 生成本地md5文件列表
-        local_md5_set = self.get_md5_set(local_md5_file)
-        # 获取本次上传文件列表与本地生成的文件列表的差集
-        compare_result = md5_set - local_md5_set
-        # 如果本次上传的文件列表是本地生成校验文件列表的子集 则认为上传接收成功
-        # 如果只有部分文件校验成功则上传部分文件
-        success_list = md5_set - compare_result
-        is_exist_zq = self.is_exist_zq(sys_id,data_type,zq)
-        if is_exist_zq is None:
-            # 先将账期空目录上传到备份服务器
-            cmd = f"scp -P 54321 -r ./{local_dir} root@jing.tk:/usr/local/my/upload/{sys_id}/{data_type}/  && rm -fr {local_dir}"
-            ss = os.system(cmd)
-            print(f"290:{ss}")
+        local_md5_file = ''
+        local_dir = ''
+        try:
+            # 获取本地生成的md5文件名称和账期文件夹
+            local_md5_file, local_dir, zq, sys_id = gen_local_md5(data_type, md5_file)
 
-        # 修改md5文件名称+upload标识字符串 防止二次扫描
-        if success_list != set():
-            upload_md5_file = str(md5_file).replace(".md5.txt", ".md5-upload.txt")
-            os.rename(md5_file,upload_md5_file)
-            cmd = f"scp -P 54321 {upload_md5_file} root@jing.tk:/usr/local/my/upload/{sys_id}/{data_type}/{local_dir}/"
-            res = os.system(cmd)
-            print(f"298:{res}")
+            # 生成本地md5文件列表
+            local_md5_set = self.get_md5_set(local_md5_file)
+            os.remove(local_md5_file)
 
-            # 将系统侧所有上传的文件 复制到存储服务器
-            handle_check_success(success_list, sys_id, data_type, local_dir, zq)
-            # 最后上传重命名后的md5文件 备份服务器监控到改名后的md5文件则认为 备份文件接收完成
-        os.remove(local_md5_file)
-        # os.remove(upload_md5_file)
-        if compare_result != set():
-            # time.sleep(3600)
-            # 存在部分文件未上传成功或校验失败
-            self.handle_check_failed(compare_result)
+
+            # 获取本次上传文件列表与本地生成的文件列表的差集
+            compare_result = md5_set - local_md5_set
+            # 如果本次上传的文件列表是本地生成校验文件列表的子集 则认为上传接收成功
+            # 如果只有部分文件校验成功则上传部分文件
+            success_list = md5_set - compare_result
+            is_exist_zq = self.is_exist_zq(sys_id, data_type, zq)
+            if is_exist_zq is None:
+                # 先将账期空目录上传到备份服务器
+                cmd = f"scp -P 54321 -r ./{local_dir} root@jing.tk:/usr/local/my/upload/{sys_id}/{data_type}  && rm -fr {local_dir}"
+                print(cmd)
+                ss = os.system(cmd)
+                if ss != 0:
+                    os.rmdir(local_dir)
+                    return
+                print(f"290:{ss}")
+
+            if success_list != set():
+                # 修改md5文件名称+upload标识字符串 防止二次扫描
+                upload_md5_file = str(md5_file).replace(".md5.txt", ".md5-upload.txt")
+                os.rename(md5_file, upload_md5_file)
+                cmd = f"scp -P 54321 {upload_md5_file} root@jing.tk:/usr/local/my/upload/{sys_id}/{data_type}/{local_dir}/"
+                res = os.system(cmd)
+                if res != 0:
+                    os.rmdir(local_dir)
+                    return
+                print(f"298:{res}")
+
+                # 将系统侧所有上传的文件 复制到存储服务器
+                handle_check_success(success_list, sys_id, data_type, local_dir, zq)
+                # 最后上传重命名后的md5文件 备份服务器监控到改名后的md5文件则认为 备份文件接收完成
+            # os.remove(upload_md5_file)
+            if compare_result != set():
+                # time.sleep(3600)
+                # 存在部分文件未上传成功或校验失败
+                self.handle_check_failed(compare_result)
+
+        except Exception as e:
+            traceback.print_exc()
+            os.remove(local_md5_file)
+            os.rmdir(local_dir)
+            print(f"讀取本地生成的md5文件異常：{e}")
 
 
 if __name__ == '__main__':
