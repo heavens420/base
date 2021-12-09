@@ -41,10 +41,11 @@ def find_zq_by_sysid(sysid, data_type):
     cursor, conn = con()
     sql = f"select distinct log.zq from t_back_log log where log.sys_name_eng = '{sysid}'" \
           f"and log.status_cd = 0 and log.zq is not null"
-    print(sql)
     # 数据类型非空则作为查询条件
     if data_type != '':
         sql = sql + f" and log.data_type_eng = '{data_type}'"
+    print(sql)
+
     cursor.execute(sql)
     zq_list = cursor.fetchall()
     conn.close()
@@ -67,7 +68,7 @@ def zq_query(promote):
     data_type = ''
     if param[0] != '':
         sysid = str(param[0])
-        if len(param) > 1:
+        if len(param) > 0:
             data_type = param[1]
         find_zq_by_sysid(sysid, data_type)
     else:

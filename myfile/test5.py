@@ -28,11 +28,11 @@ def con():
 
 def send_email(to, title, message, file):
     username = "heavens420@163.com"
-    passwd = "VIJAZVONSXDJBTBP"
+    passwd = "KKCECXORJIBOUHOP"
     mail_server = "smtp.163.com"
     mail_port = 465
 
-    # to = "zhao.longlong@ustcinfo.com"
+    to = "zhao.longlong@ustcinfo.com"
 
     content_apart = MIMEText(message, "plain", _charset="utf-8")
     multipart = MIMEMultipart()
@@ -58,9 +58,9 @@ def gen_report(today):
     # now = datetime.datetime.strptime(today,"%Y-%m-%d %H:%M:%S")
     now = today
     this_mon = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    last_week_mon = this_mon - timedelta(days=7)
+    last_week_mon = this_mon - timedelta(days=70)
     cursor, conn = con()
-    sql = f"select con.sys_name_chn,con.data_type_chn,con.back_cycle,con.keep_time,log.file_name,log.back_finish_date,con.keep_time," \
+    sql = f"select con.sys_name_chn,con.sys_name_eng,con.data_type_chn,con.back_cycle,con.keep_time,log.file_name,log.back_finish_date," \
           f"log.file_size from t_back_config con inner join t_back_log log on con.sys_name_eng = log.sys_name_eng " \
           f"where con.status_cd = 0 and log.status_cd = 0 " \
           f"and log.back_finish_date < '{this_mon}' and log.back_finish_date > '{last_week_mon}'" \
@@ -70,7 +70,6 @@ def gen_report(today):
     cursor.execute(sql)
     result_list = cursor.fetchall()
     conn.close()
-
 
     # 最终的csv文件列表
     result = []
@@ -82,9 +81,12 @@ def gen_report(today):
     dh_total = 0
 
     if len(result_list) == 0:
-        with open(csv_file,"a+") as file:
+        with open(csv_file, "a+") as file:
             file.write("本週無新增備份文件")
         return csv_file
+
+    csv_title = ("系統中文名稱", "系统英文名称", "文件类型", "备份周期", "保存周期", "文件名称", "已保存周期数", "文件大小", "当前占用磁盘总量")
+    result.append(csv_title)
 
     for i in range(len(result_list)):
         child = list(result_list[i])
@@ -92,12 +94,12 @@ def gen_report(today):
         # for it in child:
         now = datetime.datetime.now()
         # 备份完成时间
-        back_finish_date = str(child[5])
+        back_finish_date = str(child[6])
         back_date = datetime.datetime.strptime(back_finish_date, "%Y-%m-%d %H:%M:%S")
         # 已经备份地周期数
-        delta = (now - back_date).days % int(child[2])
+        delta = (now - back_date).days % int(child[3])
         # 保存已经备份的周期数
-        child[5] = delta
+        child[6] = delta
 
         # 为空表名是第一行进来，占用磁盘总量就是当前文件大小
         if pre_sys == '':
