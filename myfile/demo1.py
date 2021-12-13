@@ -1,7 +1,7 @@
 import os
 import datetime
 import re
-
+from email.header import Header
 
 def path_join():
     rs = os.path.join("qw", "23", "jfs", "iii")
@@ -75,9 +75,11 @@ if __name__ == '__main__':
 
     # print(os.system("ls"))
 
+    lst = ['2332df','fsfsff']
+    print(Header("".join(lst)))
     # test_and()
     # test_format_date()
-    qtest_os()
+    # qtest_os()
     # test_group()
     # test_set()
 

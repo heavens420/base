@@ -58,8 +58,6 @@ def gen_local_md5(data_type, md5_path):
         print(f"生成本地md5文件异常：{e}")
 
 
-
-
 # 根据当前时间生成账期目录
 def gen_local_dir(sys_id, data_type, now):
     # 格式化当前字符串为日期
@@ -185,6 +183,8 @@ def write_upload_log(file_list, sys_id, data_type, zq):
     # 遍历上传成功的文件列表 添加日志
     for item in file_list:
         file_name = item[1]
+        # if file_name.startswith(data_type):
+            
         size = os.path.getsize(file_name)
 
         sql2 = f"insert into t_back_log(sys_name_eng,back_cycle,keep_time,data_type_eng,file_name,back_begin_date,file_size,zq,status_cd,send_count,md5) " \
@@ -199,6 +199,8 @@ def write_upload_log(file_list, sys_id, data_type, zq):
 # 遍历列表 逐个将文件上传到备份服务器
 def handle_check_success(file_list, sys_id, data_type, local_dir, zq):
     for file in file_list:
+        # if file[1].startswith(data_type):
+
         cmd = f"scp  -P 54321 ./{file[1]} root@jing.tk:/usr/local/my/upload/{sys_id}/{data_type}/{local_dir}/{file[1]}"
         os.system(cmd)
     # 同时更新日志
@@ -270,6 +272,18 @@ class Collect(object):
         is_exist = cursor.fetchone()
         return is_exist
 
+    # 根據文件類型創建文件夾 並返回文件夾名稱集合
+    def get_all_date_type(self, file_list):
+        data_type_set = set()
+        for item in file_list:
+            # 獲取文件名稱的前綴 即爲文件類型
+            data_type = str(list(item)[1]).split(".")[0]
+            data_type_set.add(data_type)
+            # 不存在才創建
+            if not os.path.isdir(data_type):
+                os.mkdir(data_type)
+        return data_type_set
+
     # 文件上传
     def upload_files(self, md5_file):
         if md5_file is None:
@@ -291,7 +305,6 @@ class Collect(object):
             local_md5_set = self.get_md5_set(local_md5_file)
             os.remove(local_md5_file)
 
-
             # 获取本次上传文件列表与本地生成的文件列表的差集
             compare_result = md5_set - local_md5_set
             # 如果本次上传的文件列表是本地生成校验文件列表的子集 则认为上传接收成功
@@ -300,8 +313,12 @@ class Collect(object):
             is_exist_zq = self.is_exist_zq(sys_id, data_type, zq)
             if is_exist_zq is None:
                 # 先将账期空目录上传到备份服务器
+                cmd2 = f"scp -P 54321 -r ./{local_dir} root@jing.tk:/usr/local/my/upload/{sys_id}/{data_type}"
                 cmd = f"scp -P 54321 -r ./{local_dir} root@jing.tk:/usr/local/my/upload/{sys_id}/{data_type}  && rm -fr {local_dir}"
                 print(cmd)
+                kk = os.system(cmd2)
+                print(kk)
+
                 ss = os.system(cmd)
                 if ss != 0:
                     os.rmdir(local_dir)
@@ -309,24 +326,24 @@ class Collect(object):
                 print(f"290:{ss}")
 
             if success_list != set():
+                # 将系统侧所有上传的文件 复制到存储服务器
+                handle_check_success(success_list, sys_id, data_type, local_dir, zq)
+
+                # 最后上传重命名后的md5文件 备份服务器监控到改名后的md5文件则认为 备份文件接收完成
                 # 修改md5文件名称+upload标识字符串 防止二次扫描
                 upload_md5_file = str(md5_file).replace(".md5.txt", ".md5-upload.txt")
                 os.rename(md5_file, upload_md5_file)
-                cmd = f"scp -P 54321 {upload_md5_file} root@jing.tk:/usr/local/my/upload/{sys_id}/{data_type}/{local_dir}/"
+                cmd = f"scp -P 54321 {upload_md5_file} root@jing.tk:/usr/local/my/upload/{sys_id}/{data_type}/{local_dir}/ && rm -rf ./{upload_md5_file}"
                 res = os.system(cmd)
                 if res != 0:
                     os.rmdir(local_dir)
                     return
                 print(f"298:{res}")
 
-                # 将系统侧所有上传的文件 复制到存储服务器
-                handle_check_success(success_list, sys_id, data_type, local_dir, zq)
-                # 最后上传重命名后的md5文件 备份服务器监控到改名后的md5文件则认为 备份文件接收完成
-            # os.remove(upload_md5_file)
             if compare_result != set():
                 # time.sleep(3600)
                 # 存在部分文件未上传成功或校验失败
-                self.handle_check_failed(compare_result)
+                self.handle_check_failed(compare_result, sys_id, zq)
 
         except Exception as e:
             traceback.print_exc()
@@ -346,7 +363,7 @@ if __name__ == '__main__':
             # 进入到该路径
             os.chdir(current_path)
             # time.sleep(30)
-        c.upload_files(file_name)
+            c.upload_files(file_name)
         # except Exception as e:
 
         # print(e)

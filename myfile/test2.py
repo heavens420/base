@@ -121,9 +121,9 @@ def update_log(file, zq, sys_id):
 
 
 # 处理校验失败的文件 重新到接口机拉取文件
-def handle_fail_files(fail_list, sys_id, data_type, zq_dir):
+def handle_fail_files(fail_list, sys_id):
     for file_name in fail_list:
-        cmd = f"scp -P 54321 root@jing.tk:/usr/local/my/upload/{sys_id}/{data_type}/{zq_dir}/{file_name[1]} ./"
+        cmd = f"scp -P 54321 root@jing.tk:/usr/local/my/upload/{sys_id}/{file_name[1]} ./"
         os.system(cmd)
 
 
@@ -189,7 +189,7 @@ def compare_md5(md5_file, fail_count=0):
 
         time.sleep(60)
         # 重新拉取失败的文件
-        handle_fail_files(fail_set, sys_id, data_type, zq_dir)
+        handle_fail_files(fail_set, sys_id)
 
         # 重新生成md5文件
         new_local_md5 = gen_local_md5()
