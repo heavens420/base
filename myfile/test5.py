@@ -28,7 +28,7 @@ def con():
 
 def send_email(to, title, message, file):
     username = "heavens420@163.com"
-    passwd = "KKCECXORJIBOUHOP"
+    passwd = "qq"
     mail_server = "smtp.163.com"
     mail_port = 465
 
@@ -58,7 +58,7 @@ def gen_report(today):
     # now = datetime.datetime.strptime(today,"%Y-%m-%d %H:%M:%S")
     now = today
     this_mon = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    last_week_mon = this_mon - timedelta(days=70)
+    last_week_mon = this_mon - timedelta(days=7)
     cursor, conn = con()
     sql = f"select con.sys_name_chn,con.sys_name_eng,con.data_type_chn,con.back_cycle,con.keep_time,log.file_name,log.back_finish_date," \
           f"log.file_size from t_back_config con inner join t_back_log log on con.sys_name_eng = log.sys_name_eng " \
@@ -85,7 +85,7 @@ def gen_report(today):
             file.write("本週無新增備份文件")
         return csv_file
 
-    csv_title = ("系統中文名稱", "系统英文名称", "文件类型", "备份周期", "保存周期", "文件名称", "已保存周期数", "文件大小", "当前占用磁盘总量")
+    csv_title = ["系統中文名稱", "系统英文名称", "文件类型", "备份周期", "保存周期", "文件名称", "已保存周期数", "文件大小", r"当前占用磁盘总量(B)"]
     result.append(csv_title)
 
     for i in range(len(result_list)):
@@ -119,7 +119,7 @@ def gen_report(today):
         result.append(child)
 
     for item in result:
-        item = str(item).replace("(", "").replace("'", "").replace(")", "\n") \
+        item = str(item).replace("'", "") \
             .replace(" ", "").replace("[", "").replace("]", "\n")
         with open(csv_file, "a+") as cs:
             cs.write(str(item))
@@ -152,7 +152,8 @@ def gen_report(today):
 
 if __name__ == '__main__':
     try:
-        os.chdir("/usr/local/data_back/store/sys001/important/920211206000000/")
+        # os.chdir("/usr/local/data_back/store/sys001/important/920211206000000/")
+        os.chdir(r"C:\Users\420\Desktop")
         today = datetime.datetime.now()
         year = today.year
         month = today.month

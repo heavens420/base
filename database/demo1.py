@@ -146,6 +146,14 @@ def execute_many_sql():
     conn.close()
 
 
+def query_one_column():
+    cursor, conn = con()
+    sql = "select id from log"
+    cursor.execute(sql)
+    res = cursor.fetchall()
+    print(res)
+
+
 if __name__ == '__main__':
     # find_one()
     # find_all()
@@ -156,11 +164,10 @@ if __name__ == '__main__':
     # find_many_test1()
     # execute_many_sql()
 
-    lst = list()
-    for i in range(10):
-        try:
-            a = 1 / 0
-            lst.append(i)
-        except Exception as e:
-            print(e)
-    print(lst)
+    try:
+        print(111)
+        print(1 / 0)
+    except Exception as e:
+        pass
+
+    print(222)

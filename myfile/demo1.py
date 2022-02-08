@@ -3,6 +3,7 @@ import datetime
 import re
 from email.header import Header
 
+
 def path_join():
     rs = os.path.join("qw", "23", "jfs", "iii")
     lst = [12, 3, 67, 8]
@@ -68,6 +69,7 @@ def is_file():
     sss = not os.path.isfile("demo1.py")
     print(sss)
 
+
 if __name__ == '__main__':
     # sss = "1234567890"
     # ttt = sss[:3]
@@ -75,8 +77,8 @@ if __name__ == '__main__':
 
     # print(os.system("ls"))
 
-    lst = ['2332df','fsfsff']
-    print(Header("".join(lst)))
+    # lst = ['2332df','fsfsff']
+    # print(Header("".join(lst)))
     # test_and()
     # test_format_date()
     # qtest_os()
@@ -84,3 +86,6 @@ if __name__ == '__main__':
     # test_set()
 
     # is_file()
+    print(os.getcwd())
+    sys = os.getcwd().split("\\")[-1]
+    print(sys)

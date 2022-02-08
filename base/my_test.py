@@ -50,42 +50,42 @@ def ddd():
     print(minDistance(A, B))
 
 
-# ddd()
+ddd()
 
-def test_while():
-    i = 0
-    while 1:
-        print(1)
-        i += 1
-        s = i / 0
-        if i == 10:
-            return i
+# def test_while():
+#     i = 0
+#     while 1:
+#         print(1)
+#         i += 1
+#         s = i / 0
+#         if i == 10:
+#             return i
 
 
 # test_while()
+#
+#
+# def test_not():
+#     aqq = 4 > 1
+#     if not aqq:
+#         print(111)
+#     else:
+#         print(222)
+#
+#
+# def test_os_size():
+#     cmd = "wc -c ."
+#     size = os.popen(cmd)
+#     print(size.read())
+#
+#
+# def test_size2():
+#     size = os.path.getsize("../database/demo1.py")
+#     print(size)
 
 
-def test_not():
-    aqq = 4 > 1
-    if not aqq:
-        print(111)
-    else:
-        print(222)
 
-
-def test_os_size():
-    cmd = "wc -c ."
-    size = os.popen(cmd)
-    print(size.read())
-
-
-def test_size2():
-    size = os.path.getsize("../database/demo1.py")
-    print(size)
-
-
-
-if __name__ == '__main__':
+# if __name__ == '__main__':
     # test_not()
     # test_os_size()
-    test_size2()
+    # test_size2()

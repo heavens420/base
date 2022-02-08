@@ -355,15 +355,15 @@ class Collect(object):
 if __name__ == '__main__':
     c = Collect()
     while 1:
-        # try:
-        file_name = c.monitor_file(r"/usr/local/data_back/")
-        if file_name is not None:
-            # 获取当前捕获的md5文件全路径
-            current_path = os.path.dirname(file_name)
-            # 进入到该路径
-            os.chdir(current_path)
-            # time.sleep(30)
-            c.upload_files(file_name)
-        # except Exception as e:
-
-        # print(e)
+        try:
+            file_name = c.monitor_file(r"/usr/local/data_back/")
+            if file_name is not None:
+                # 获取当前捕获的md5文件全路径
+                current_path = os.path.dirname(file_name)
+                # 进入到该路径
+                os.chdir(current_path)
+                # time.sleep(30)
+                c.upload_files(file_name)
+        except Exception as e:
+            print(e)
+        time.sleep(111)
