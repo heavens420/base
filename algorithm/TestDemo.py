@@ -174,7 +174,10 @@ def fullpermutation(list):
 # fullpermutation([1, 2, 3])
 print(fullpermutation([1, 2, 3]))
 
+
+
 if __name__ == '__main__':
+    in_test()
     # split_test()
     # kk = input("jjjjjjjjj").replace("+","*").replace("-","*").replace("/","*").split("*")
     # print(kk)
@@ -194,10 +197,13 @@ if __name__ == '__main__':
     a = [426, 55, 78, 2, 7, 2, 2, 7]
     b = [12, 34, 56, 4, 6]
     # print(a.count(73))
+    print(b.pop())
+    print(b.pop(0))
+    print(b.pop(1))
 
-    for it in a:
-        if it == 34:
-            it = 100
+    # for it in a:
+    #     if it == 34:
+    #         it = 100
 
     # print(b)
     # GetResult(b)
