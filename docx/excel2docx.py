@@ -289,7 +289,8 @@ def gen_json(table_params):
     # 处理所有对象的逗号问题
     param_json = param_json.replace(",}", "}")
     # 格式化json对象
-    # param_json = json.dumps(param_json, indent=4, ensure_ascii=False)
+    param_json = json.loads(param_json)
+    param_json = json.dumps(param_json, indent=4, ensure_ascii=False)
     print(param_json)
 
     return param_json
@@ -299,7 +300,10 @@ def test_json():
     dic = handle_excel()
     for key in dic:
         value = dic[key]
-        gen_json(value)
+        format_json = gen_json(value)
+        with open("./json_test.json", "w+") as jn:
+            jn.write(format_json)
+        break
 
 
 # 判断参数的层级
@@ -314,7 +318,7 @@ def param_level(param):
 
 
 if __name__ == '__main__':
-    gen()
+    # gen()
     # read_excel()
     # handle_excel()
-    # test_json()
+    test_json()
