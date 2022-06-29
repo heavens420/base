@@ -12,8 +12,7 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT, WD_TAB_ALIGNMENT
 def read_excel():
     list_excel = []
     # excel_name = r'城域网三层VPN接入RFS_API参数.xlsx'
-    target_path = r'C:\Users\heave\Documents\WeChat ' \
-                  r'Files\wxid_d6s6ieyj6kyd12\FileStorage\MsgAttach\afe73556e8b34e0d695986ec49e1c667\File\2022-06\fffff.xlsx'
+    target_path = r'C:\Users\heave\Documents\WeChat Files\wxid_d6s6ieyj6kyd12\FileStorage\MsgAttach\afe73556e8b34e0d695986ec49e1c667\File\2022-06\C级修改(1).xlsx'
     wb = xl.load_workbook(target_path)
 
     ws = wb.active
@@ -39,10 +38,11 @@ def handle_excel():
     # head_title = ['出入参类型', '参数名称', '参数编码', '新旧值', '参数类型', '参数约束', '默认值']
     # dic['head,hkdahdk'] = head_title
     for row in list_excel:
-        if row[0] == pre_api or pre_api == 'first':
+        if row[1] == pre_api or pre_api == 'first':
             params = []
-            api = row[0] + ',' + row[1]
-            for j in range(2, len(row)):
+            if row[1] is not None and row[1] != '':
+                api = row[1] + ',' + row[2] + ',' + row[5]
+            for j in range(6, len(row)):
                 if row[j] is None:
                     row[j] = ''
                 params.append(row[j])
@@ -50,22 +50,14 @@ def handle_excel():
         else:
             dic[api] = param_list
             param_list = []
-            # api = ''
-            params = []
-            if row[0] is not None:
-                api = row[0] + ',' + row[1]
-                for j in range(2, len(row)):
-                    if row[j] is None:
-                        row[j] = ''
-                    params.append(row[j])
-                param_list.append(params)
-
-        pre_api = row[0]
-    # for key in dic:
-    #     print(str(key))
-    #     for value in dic[key]:
-    #         print(str(value),end="\t")
-    #     print()
+            api = ''
+        if row[0] is not None:
+            pre_api = row[0]
+    for key in dic:
+        print(str(key))
+        for value in dic[key]:
+            print(str(value),end="\t")
+        print()
     return dic
 
 
@@ -83,23 +75,23 @@ def gen():
     doc.styles["Heading 4"].font.size = Pt(10.5)
     doc.styles["Heading 5"].font.size = Pt(10.5)
 
-    doc.save("./fffff.docx")
+    doc.save("./ppppppppppp.docx")
 
 
 def gen_table(table_params, doc):
     # +1 是表头
-    table = doc.add_table(rows=len(table_params) + 1, cols=7, style='Table Grid')
-    head_title = ['出入参类型', '参数名称', '参数编码', '新旧值', '参数类型', '参数约束', '默认值']
+    table = doc.add_table(rows=len(table_params) + 1, cols=4, style='Table Grid')
+    head_title = ['参数名称', '参数编码', '参数类型', '参数约束', '默认值']
     # 设置表头
     # cells = table.rows[0].cells
-    for j in range(7):
+    for j in range(4):
         # cells[j].text = str(head_title[j])
         table.cell(0, j).text = str(head_title[j])
 
     # 填充表数据 数据从第二行开始填充 防止覆盖表头
     for i in range(len(table_params)):
         cells = table.rows[i + 1].cells
-        for j in range(7):
+        for j in range(4):
             cells[j].text = str(table_params[i][j])
 
     table.style.font.size = Pt(10.5)
@@ -135,8 +127,8 @@ def handle_row(doc):
         prefix = new_api_code[0]
         mid = new_api_code[1]
         tail = new_api_code[2]
-        url = f'    /api/rest/ctrl/ip/{prefix}/{mid}/{tail}'
-
+        # url = f'    /api/rest/ctrl/ip/{prefix}/{mid}/{tail}'
+        url = key.split(",")[2]
         # api 定义方法 字体红色
         define_title = 'API定义方法'
         define_content = '''    补充内容：入参、出参（必须定义出错时的返回值和说明）、报文样例等 可以定义通用接口出错返回值，有特殊的要单独定义'''
@@ -178,7 +170,7 @@ def handle_row(doc):
         a = "    a)发送报文样例:"
         URI = method + "  " + "http://xxx:9999/" + url
         accept = "    Accept: application/yang-data+json"
-        params_json = gen_json(table_params,api_title)
+        params_json = gen_json(table_params)
         b = """
     b )应答示例：
         HTTP/1.1 201 Created
@@ -240,8 +232,7 @@ def set_content(doc, content, color=False, center=False):
 
 
 # 二维数组转json
-def gen_json(table_params,api_name):
-    index = 0
+def gen_json(table_params):
     # 最后要补充的右括弧数量
     kuohu_count = 0
     # 初始化的左括弧
@@ -250,11 +241,10 @@ def gen_json(table_params,api_name):
     pre_level = 0
     # 遍历二维表
     for params in table_params:
-        index += 1
         # 获取参数级别
-        level = param_level(params[2])
+        level = param_level(params[3])
         # 格式化参数
-        param = str(params[2]).replace(">", "")
+        param = str(params[3]).replace(">", "")
         # 只转换入参 出参同理
         if str(params[0]).strip() == '入参':
             # 如果当前参数级别大于上级 即当前参数可能为上级参数的子参数 即嵌套关系 （标题越小 级别越高层级越靠外 原理类似word标题级别）
@@ -298,13 +288,9 @@ def gen_json(table_params,api_name):
     # 处理所有对象的逗号问题
     param_json = param_json.replace(",}", "}")
     # 格式化json对象
-    try:
-        param_json = json.loads(param_json)
-        param_json = json.dumps(param_json, indent=4, ensure_ascii=False)
-    except:
-        print('这里打印的是格式化出错的json')
-        print(f'index:{index} {api_name}')
-        print(param_json)
+    param_json = json.loads(param_json)
+    param_json = json.dumps(param_json, indent=4, ensure_ascii=False)
+    print(param_json)
 
     return param_json
 
@@ -331,7 +317,7 @@ def param_level(param):
 
 
 if __name__ == '__main__':
-    gen()
+    # gen()
     # read_excel()
-    # handle_excel()
+    handle_excel()
     # test_json()
