@@ -1,3 +1,4 @@
+import random
 import time
 
 from docx import Document
@@ -6,20 +7,24 @@ from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 from openpyxl.utils import get_column_letter
 
-
-file_name = r'8-中国电信新一代云网运营业务系统技术规范集 采控中心系列 功能、指令级接口技术要求 PON 0922(1)'
-
+# file_name = r'12-中国电信新一代云网运营业务系统技术规范集 采控中心系列 功能、指令级接口技术要求 PON 0922(1)'
+# file_name = r'10-中国电信新一代云网运营业务系统技术规范集 采控中心系列 服务级接口技术要求 IPRAN STN- -20220907 v1.0'
 # file_name = r'1-中国电信新一代云网运营业务系统技术规范集 采控中心系列 功能、指令级接口技术要求 IP城域、骨干_0915 - 副本 (2)'
 # file_name = r'中国电信新一代云网运营业务系统技术规范集-采控中心系列-服务级接口技术要求IP新型城域网-0909'
 # file_name = r'7-中国电信新一代云网运营业务系统技术规范集采控中心系列功能、指令级接口技术要求 IPRAN STN --20220907 v1.0'
 # file_name = r'中国电信新一代云网运营业务系统技术规范集采控中心系列服务级接口技术要求 IPRAN STN- -20220907 v1.0'
 # file_name = r'中国电信新一代云网运营业务系统技术规范集 采控中心系列 功能、指令级接口技术要求 IP城域、骨干_0915'
 # file_name = r'中国电信新一代云网运营业务系统技术规范集-采控中心接口系列-服务级接口技术要求 IP城域、骨干_0915'
-
-
 # file_name = r'2-中国电信新一代云网运营业务系统技术规范集 采控中心系列 功能、指令级接口技术要求 传输网（CD级）-20220914.1'
 
-path = f'C:\\Users\\heave\\Desktop\\DeskTop\\考核相关专业api\\{file_name}' + '.docx'
+# file_name = r'1-中国电信新一代云网运营业务系统采控中心服务级接口技术要求 传输网（B级）-20221017.1版本-20221026更新 - 20221214格式调整(1)'
+# file_name = r'2-中国电信新一代云网运营业务系统采控中心功能、指令级接口技术要求 传输网（CD级）-20221017.1版本-20221026更新 - 20221214格式调整'
+file_name = r'3-中国电信新一代云网运营业务系统采控中心功能、指令级接口技术要求 无线网-1013'
+# file_name = r'4-中国电信新一代云网运营业务系统采控中心技术要求 5GC 服务级接口 -20221222'
+# file_name = r'5-中国电信新一代云网运营业务系统采控中心技术要求 5GC 功能、指令级接口-20221219'
+
+# path = f'C:\\Users\\heave\\Desktop\\DeskTop\\考核相关专业api\\{file_name}' + '.docx'
+path = f'C:\\Users\\heave\\Desktop\\DeskTop\\word转excel\\20230111\\{file_name}' + '.docx'
 
 
 # 创建docx对象
@@ -126,10 +131,9 @@ def read_tables() -> list:
 
 # 判断表头是否满足要求
 def judge_table(table) -> bool:
-    template = ['入参/出参', '参数位置', '参数名称', '参数编码', '参数类型（string等）', '参数类型(string等)', '参数约束（必填m、可选o、条件可选c）',
-                '参数约束(必填m,可选o,条件可选c)',
-                '参数约束（必m、可选o、条件可选c）', '参数说明（含字典值等）']
-    template2 = ['出入参类型', '参数名称', '参数编码', '新旧值', '参数类型', '参数约束', '参数说明(含字典值等)', '默认值','参数示例','备注', '']
+    template = ['入参/出参', '参数位置', '参数名称', '参数编码', '参数类型（string等）', '参数类型(string等)', '参数类型(string等）',
+                '参数约束（必填m、可选o、条件可选c）','参数约束(必填m,可选o,条件可选c)','参数约束（必m、可选o、条件可选c）', '参数说明（含字典值等）']
+    template2 = ['出入参类型', '参数名称', '参数编码', '新旧值', '参数类型', '参数约束', '参数说明(含字典值等)', '默认值', '参数示例', '备注', '']
     col_len = len(table.columns)
     if col_len < 6:
         return False
@@ -238,6 +242,10 @@ def read_doc() -> list:
                     nx = next(para)
                     if str(nx.text).__contains__('\t'):
                         line = str(nx.text).split('\t')
+                    elif str(nx.text).__contains__(':'):
+                        line = str(nx.text).split(':')
+                    elif str(nx.text).__contains__('：'):
+                        line = str(nx.text).split('：')
                     else:
                         line = str(nx.text).split(" ")
                     if len(line) == 2:
@@ -252,7 +260,7 @@ def read_doc() -> list:
                         method_name = line[0]
                         uri_name = line[-1]
                         if len(line) != 2:
-                            print(f'接口访问方法格式异常：{line}')
+                            print(f'接口访问方法格式异常：{nx}')
                     row_list.append(method_name)
                     row_list.append(uri_name)
             # 五个参数俱全 满足返回要求
@@ -299,8 +307,8 @@ def merge_doc_table():
     write_head_title(ws)
 
     doc_list = read_doc()
-    for kk in doc_list:
-        print(f'{kk[1]}')
+    # for kk in doc_list:
+    #     print(f'{kk[1]}')
     tables_list = read_tables()
     length = max(len(doc_list), len(tables_list))
     if len(doc_list) != len(tables_list):
@@ -327,7 +335,7 @@ def merge_doc_table():
                     for s in range(5):
                         ws.cell(row_number, s + 1, doc_list[i][s])
                 # 6-11列
-                for j in range(6, 12):
+                for j in range(6, len(table[k]) + 6):
                     write_doc = False
                     ws.cell(row_number, j, table[k][j - 6])
         except Exception as e:
@@ -354,33 +362,49 @@ def test_iter():
 
 
 # 格式化标题
-def format_title(doc, content):
-    head = doc.add_heading("", level=6)
-    run = head.add_run(content)
-    run.font.size = Pt(10.5)
-    run.font.color.rgb = RGBColor(0, 0, 0)
-    run.font.name = 'arial'
-    run._element.rPr.rFonts.set(qn('w:eastAsia'), u'黑体')
-    run.bold = False  # 加粗
-    run.italic = False  # 斜体
+def format_title(doc, content, level='5'):
+    # head = doc.add_heading("", level=5)
+    # run = head.add_run(content)
+    # run.font.size = Pt(10.5)
+    # run.font.color.rgb = RGBColor(0, 0, 0)
+    # run.font.name = 'arial'
+    # run._element.rPr.rFonts.set(qn('w:eastAsia'), u'黑体')
+    # run.bold = False  # 加粗
+    # run.italic = False  # 斜体
+    content.style.name = 'Heading ' + level
+    print(level)
+    # 修改样式
+    content.paragraph_format.line_spacing = 1.5
+    for run in content.runs:
+        run.font.size = Pt(10.5)
+        run.font.name = u'黑体'
+        run._element.rPr.rFonts.set(qn('w:eastAsia'), u'黑体')
+        run.font.italic = False
+        run.font.bold = False
 
 
 # 修改文档所有不合规标题
 def for_paragraphs():
     doc = get_docx_obj()
-    doc1 = Document()
     line = doc.paragraphs
 
     for content in line:
         title = content.style.name
         name = str(content.text)
+        format_title(doc, content, str(random.randint(1, 5)))
         if name == '接口名称' and (not str(title).startswith('Heading') and not str(title).endswith('标题')):
-            doc1.add_heading(name, level=6)
-            # format_title(doc, name)
+            # doc1.add_heading(name, level=6)
+            format_title(doc, content)
+            # ss = dir(content.paragraph_format)
+            # content.paragraph_format.style.name = 'Heading 5'
+            # temp_content.style.name = 'Heading 5'
         if name == '接口访问方法' and (not str(title).startswith('Heading') and not str(title).endswith('标题')):
-            doc1.add_heading(name, level=6)
-            # format_title(doc, name)
-    doc1.save(f'./download/{file_name}.docx')
+            # doc1.add_heading(name, level=6)
+            format_title(doc, content, '6')
+            # temp_content.style.name = 'Heading 5'
+            # content.paragraph_format.style.name = 'Heading 5'
+            # pass
+    doc.save(f'./download/{file_name}-new.docx')
 
 
 if __name__ == '__main__':

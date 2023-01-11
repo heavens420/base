@@ -1,8 +1,8 @@
 from docx import Document
 
-# path = r'./学生自主学习问卷调查.docx'
-# path = r'C:\Users\420\Desktop\source\TimFile\TF2\学生自主学习问卷调查2－默认报告.docx'
-path = r'C:\Users\420\Desktop\source\TimFile\TF2\小学思政课教学现状调查问卷－默认报告.docx'
+# path = r'./学生自主学习问卷调查.mydocx'
+# path = r'C:\Users\420\Desktop\source\TimFile\TF2\学生自主学习问卷调查2－默认报告.mydocx'
+path = r'C:\Users\420\Desktop\source\TimFile\TF2\小学思政课教学现状调查问卷－默认报告.mydocx'
 
 
 def get_tables():

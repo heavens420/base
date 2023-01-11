@@ -4,7 +4,7 @@ import openpyxl as xl
     单元格合并
 '''
 
-path = r'../docx/总表.xlsx'
+path = r'../mydocx/总表.xlsx'
 # path = r"C:\Users\420\Desktop\test.xlsx"
 wb = xl.load_workbook(path)
 sheets = wb.sheetnames

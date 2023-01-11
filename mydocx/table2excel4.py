@@ -4,8 +4,8 @@ import openpyxl as xl
 wb = xl.Workbook()
 ws = wb.active
 
-# path = r'C:\Users\420\Desktop\中国电信新一代云网运营业务系统采控中心RES open API接口规范-传输专业分册-0826.docx'
-path = r'C:\Users\420\Desktop\中国电信新一代云网运营业务系统采控中心RES open API接口规范-传输专业分册-0826 - 副本.docx'
+# path = r'C:\Users\420\Desktop\中国电信新一代云网运营业务系统采控中心RES open API接口规范-传输专业分册-0826.mydocx'
+path = r'C:\Users\420\Desktop\中国电信新一代云网运营业务系统采控中心RES open API接口规范-传输专业分册-0826 - 副本.mydocx'
 obj = Document(path)
 
 result_list = list()

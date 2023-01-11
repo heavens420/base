@@ -9,7 +9,9 @@ print(response.url)
 # post请求传参 data为传参 json形式
 data = {"id": 1, "name": "hhhh"}
 r2 = requests.post("http://httpbin.org/post", data=data)
+# 数据为空时不报错
 print(r2.text)
+# 数据为空时报错
 print(r2.json())
 
 # 发送put请求 data为传参 json形式

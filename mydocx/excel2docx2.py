@@ -10,6 +10,29 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT, WD_TAB_ALIGNMENT
 '''
     2.0版本：支持空白行处理 多sheet一次处理 生成的json同时赋值
 '''
+
+
+def gen(file_name):
+    excel_name = 'D级接口样例'
+    # target_path = r'C:/Users/heave/Documents/WeChat Files/wxid_d6s6ieyj6kyd12/FileStorage/File/2022-09/' + excel_name + '.xlsx'
+    target_path = f'./download/{excel_name}.xlsx'
+    if file_name != '':
+        target_path = file_name
+
+    wb = xl.load_workbook(target_path)
+    sheets = wb.sheetnames
+    result_file_list = []
+    for sheet in sheets:
+        ws = wb[sheet]
+        doc = Document()
+        handle_row(doc, ws)
+        result_file = f"./download/{excel_name}-{sheet}.docx"
+        doc.save(result_file)
+        result_file_list.append(result_file)
+    wb.close()
+    return result_file_list
+
+
 def read_excel(ws):
     list_excel = []
     # excel_name = '附件一 RES Open API B C D级设计-IPRAN STN-20220825-v1.7-简 - 转'
@@ -75,18 +98,6 @@ def handle_excel(ws):
     return dic
 
 
-def gen():
-    excel_name = '附件一 RES Open API B C D级设计-IPRAN STN-20220825-v1.7-简 - 转'
-    target_path = r'C:/Users/heave/Documents/WeChat Files/wxid_d6s6ieyj6kyd12/FileStorage/File/2022-08/'+excel_name+'.xlsx'
-    wb = xl.load_workbook(target_path)
-    sheets = wb.sheetnames
-    for sheet in sheets:
-        ws = wb[sheet]
-        doc = Document()
-        handle_row(doc,ws)
-        doc.save(f"./{excel_name}-{sheet}.docx")
-
-
 def gen_table(table_params, doc):
     # +1 是表头
     table_len = len(table_params) + 1
@@ -121,7 +132,7 @@ def gen_table(table_params, doc):
     table.style.paragraph_format.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
 
 
-def handle_row(doc,ws):
+def handle_row(doc, ws):
     dic = handle_excel(ws)
     # 五级标题
     no = 0
@@ -129,7 +140,8 @@ def handle_row(doc,ws):
         no += 1
         # 行下五级标题
         # 标题前的数字编号标题
-        no_title = f"6.3.1.{no}"
+        # no_title = f"6.3.1.{no}"
+        no_title = f"1.{no}"
         # 标题下级标题 接口名称
         api_title = key.split(",")[0]
         # 标题
@@ -177,28 +189,30 @@ def handle_row(doc,ws):
         set_content(doc, "API名称：" + api_title + "\nAPI编码：" + api_code, par_indent=True)
 
         # eg: 接口访问方法
-        set_head_style(doc, no_title + ".2" + method_title, 5, 12)
+        # set_head_style(doc, no_title + ".2" + method_title, 5, 12)
 
-        set_content(doc, method + "\n" + url, par_indent=True)
+        # set_content(doc, method + "\n" + url, par_indent=True)
         # set_content(doc, url)
 
         # API定义方法
-        set_head_style(doc, no_title + ".3" + define_title, 5, 12)
+        # set_head_style(doc, no_title + ".3 " + define_title, 5, 12)
 
-        set_content(doc, define_content, first_indent=True)
+        # 内容
+        # set_content(doc, define_content, first_indent=True)
         # doc.add_paragraph(define_content).paragraph_format.left_indent = Cm(0.75)
         # 表格
         table_title = f'表1　{api_title}参数表'
-        set_content(doc, table_title, False, True)
+        # set_content(doc, table_title, False, True)
         # doc.add_paragraph(table_title).paragraph_format.left_indent = Cm(0.75)
 
         # 表格参数数据
         table_params = dic[key]
         # 画表格
-        gen_table(table_params, doc)
+        # gen_table(table_params, doc)
 
         req_title = "请求示例"
-        set_head_style(doc, no_title + ".4" + req_title, 5, 12)
+        set_head_style(doc, no_title + ".2 " + req_title, 5, 12)
+        # set_head_style(doc, no_title + ".4" + req_title, 5, 12)
         # URI = method + "  " + "http://xxx:9999/" + url
         URI = method + "   " + "http://10.128.86.64:8000" + url.replace(" ", "")
         # accept = "    Accept: application/yang-data+json"
@@ -207,29 +221,29 @@ def handle_row(doc,ws):
 
         a = "a )发送报文样例:"
         b = "b )应答示例："
-        e = "c )错误码说明："
+        c = "c )错误码说明："
         biao2 = "Xx错误编码"
 
         set_content(doc, a)
         set_content(doc, URI + "\n" + params_json)
         set_content(doc, b)
         set_content(doc, out_params_json)
-        set_content(doc, e)
-        set_content(doc, biao2, center=True)
+        # set_content(doc, c)
+        # set_content(doc, biao2, center=True)
 
         # 错误编码表格
         biao_list = [
             ['错误编码', '说明'],
             ['IpInBlacklist', 'IP地址在黑名单中']
         ]
-        table2 = doc.add_table(rows=len(biao_list), cols=2, style='Table Grid')
+        # table2 = doc.add_table(rows=len(biao_list), cols=2, style='Table Grid')
 
-        for i in range(len(biao_list)):
-            for j in range(2):
-                # table2.cell(i, j).text = biao_list[i][j]
-                run = table2.cell(i, j).paragraphs[0].add_run(biao_list[i][j])
-                run.font.name = 'Arial'  # 英文字体设置
-                run._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
+        # for i in range(len(biao_list)):
+        #     for j in range(2):
+        #         # table2.cell(i, j).text = biao_list[i][j]
+        #         run = table2.cell(i, j).paragraphs[0].add_run(biao_list[i][j])
+        #         run.font.name = 'Arial'  # 英文字体设置
+        #         run._element.rPr.rFonts.set(qn('w:eastAsia'), u'宋体')
 
 
 # 整理一个接口函数，可以扩充完善
@@ -281,26 +295,34 @@ def gen_json(table_params, api_name, param_type):
     param_json = "{"
     # 上一个参数级别
     pre_level = 0
+    level = 0
     # 遍历二维表
     for params in table_params:
         index += 1
-        # 获取参数级别
-        level = param_level(params[8])
+        # # 获取参数级别 不能在这里获取参数级别 必须在判断参数类型后获取
+        # 以判断入参举例 如果第一行是入参则level = 1 pre_level = 1但如果第二行不是入参 但依然会获取level 则level = 0 从而pre_level=0
+        # 如果第三行或者第n行(n>=3)是入参 因为之前都不是入参但依然获取了level 到真正是入参的时候pre_level的值即为入参前最后一个非入参的level
+        # 而不是第一行的level的值 那么后面再去比较pre_level和level 就可能不准确 因为已经不是相同类型参数的相邻level比较了
+        # level = param_level(params[8])
         # 格式化参数
         param = str(params[8]).replace(">", "")
         # 只转换入参 出参同理
         if str(params[5]).strip() == param_type:
+            # 获取参数级别
+            level = param_level(params[8])
+
             # 提前替换value中的特殊字符 保证json正常格式化
             value = str(params[11]).replace("\F", "00123").replace('/F', '00124').replace(',', '00125') \
                 .replace(':', '00126').replace('{', '00127').replace('}', '00128').replace("\"", "00129") \
-                .replace("\n", "00130")
+                .replace("\n", "00130").replace("\A", "00131").replace(r"Y\N", "00132")
             # 如果当前参数级别大于上级 即当前参数可能为上级参数的子参数 即嵌套关系 （标题越小 级别越高层级越靠外 原理类似word标题级别）
             if level >= pre_level:
                 # 构建json 往后加参数
                 param_json += f"\"{param}\""
                 # 判断当前参数是不是上级参数子参数
                 if str(params[9]).strip().lower() == "Object".lower() or \
-                        str(params[9]).strip().lower() == "Array".lower():
+                        str(params[9]).strip().lower() == "Array".lower() or \
+                        str(params[9]).strip().lower() == 'objectlist':
                     # 判断当前参数是否有子参数 有 加 {
                     param_json += ":{"
                     # 同时右括弧数量 +1
@@ -308,8 +330,6 @@ def gen_json(table_params, api_name, param_type):
                 else:  # 当前参数没有子参数 直接在参数后面补上 : "",
                     # param_json += ":\"\","
                     param_json += ":\"" + value + "\","
-                    # 特殊字符提前替换 保证json正确格式化
-                    # param_json = param_json.replace("/", "//")
             else:  # 当前参数级别小于上个参数 说明 上一个json对象已经结束 下面开始下一级json对象的构造
                 # 所以要给上级json (子)对象补上 右括弧
                 for i in range(pre_level - level):
@@ -319,20 +339,18 @@ def gen_json(table_params, api_name, param_type):
                 # 这里就是下一个json对象的构建了 原理同上
                 param_json += f"\"{param}\""
                 if str(params[9]).strip().lower() == "Object".lower() or \
-                        str(params[9]).strip().lower() == "Array".lower():
+                        str(params[9]).strip().lower() == "Array".lower() or \
+                        str(params[9]).strip().lower() == 'objectlist':
                     param_json += ":{"
                     kuohu_count += 1
                 else:
                     # param_json += ":\"\","
                     param_json += ":\"" + value + "\","
-                    # 特殊字符提前替换 保证json正确格式化
-                    # param_json = param_json.replace("/", "//")
 
-        # 把当前参数等级保存 用于上级参数和当前参数的比较
         pre_level = level
         # 无用代码 根本不会执行 但可优化代码 使之有用
-        if pre_level == 0:
-            kuohu_count = 0
+        # if pre_level == 0:
+        #     kuohu_count = 0
     # 补全最后的右括弧
     for i in range(kuohu_count):
         param_json = param_json + "},"
@@ -353,7 +371,7 @@ def gen_json(table_params, api_name, param_type):
     # value = str(params[11]).replace(r"\F", "00123").replace(r'/F', '00124').replace(r',', '00125') \
     #     .replace(r':', '00126').replace(r'{', '00127').replace(r'}', '00128').replace(r"\"", "00129")
     param_json.replace("00123", "\F").replace("00124", '/F').replace('00125', ',').replace('00126', ':').replace(
-        '00127', '{').replace('00128', '}').replace('00129', '\"').replace("00130", '、')
+        '00127', '{').replace('00128', '}').replace('00129', '\"').replace("00130", '、').replace("00131", "\A").replace("00132",r"Y\N")
     return param_json
 
 
@@ -379,7 +397,7 @@ def param_level(param):
 
 
 if __name__ == '__main__':
-    gen()
+    gen('')
     # read_excel()
     # handle_excel()
     # test_json()

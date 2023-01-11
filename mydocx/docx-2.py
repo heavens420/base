@@ -3,7 +3,7 @@ import re
 
 max_level1 = 0
 level1 = 0
-obj = Document('C:\\Users\\420\\Desktop\\Ca111.docx')
+obj = Document('C:\\Users\\420\\Desktop\\Ca111.mydocx')
 key = 0
 dic = {}
 for content in obj.paragraphs:

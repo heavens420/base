@@ -3,7 +3,7 @@ from collections.abc import Iterator
 
 
 def print_word_title():
-    obj = Document('C:\\Users\\420\\Desktop\\Ca111.docx')
+    obj = Document('C:\\Users\\420\\Desktop\\Ca111.mydocx')
     # obj = [1, 2, 3]
     iterator = iter(obj.paragraphs)
     # while 1:

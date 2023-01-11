@@ -1,11 +1,11 @@
 import json
-from docx import Document
+from mydocx import Document
 import re
 
-# doc_path = r'C:\Users\420\Desktop\kdgc\6月集团考核\IPC接口测试\IP测试记录汇总20210715.docx'
-# doc_path = r'C:\Users\420\Desktop\王涛IP测试记录.docx'
-# doc_path = r'C:\Users\420\Desktop\IP测试-李亚辉.docx'
-doc_path = r'C:\Users\420\Desktop\IP指令附加测试0825.docx'
+# doc_path = r'C:\Users\420\Desktop\kdgc\6月集团考核\IPC接口测试\IP测试记录汇总20210715.mydocx'
+# doc_path = r'C:\Users\420\Desktop\王涛IP测试记录.mydocx'
+# doc_path = r'C:\Users\420\Desktop\IP测试-李亚辉.mydocx'
+doc_path = r'C:\Users\420\Desktop\IP指令附加测试0825.mydocx'
 # json_path = r'C:\Users\420\Desktop\IP中期考核.json'
 # json_path = r'C:\Users\420\Desktop\IP中期考核-王涛.json'
 # json_path = r'C:\Users\420\Desktop\0707已测试IP.postman_collection.json'

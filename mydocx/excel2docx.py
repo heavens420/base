@@ -8,7 +8,7 @@ import json
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT, WD_TAB_ALIGNMENT
 
 
-# from docx.enum.table import wD_CELL_VERTICAL_ALIGNMENT
+# from mydocx.enum.table import wD_CELL_VERTICAL_ALIGNMENT
 
 '''
     excel文档转word
@@ -86,7 +86,7 @@ def gen():
     # doc.styles["Heading 4"].font.size = Pt(10.5)
     # doc.styles["Heading 5"].font.size = Pt(10.5)
 
-    doc.save("./newFile.docx")
+    doc.save("./newFile.mydocx")
 
 
 def gen_table(table_params, doc):

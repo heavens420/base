@@ -3,7 +3,7 @@ import re
 
 
 def get_max_level():
-    obj = Document('C:\\Users\\420\\Desktop\\Ca111.docx')
+    obj = Document('C:\\Users\\420\\Desktop\\Ca111.mydocx')
     max_level1 = 0
     key = 0
     dic = {}
@@ -22,7 +22,7 @@ def get_max_level():
 
 
 def print_word_title():
-    obj = Document('C:\\Users\\420\\Desktop\\Ca111.docx')
+    obj = Document('C:\\Users\\420\\Desktop\\Ca111.mydocx')
     back_level = 0
     dic = get_max_level()
     max_level = 0
