@@ -8,9 +8,14 @@ from docx import Document
 # file_name = r'1-中国电信新一代云网运营业务系统技术规范集 采控中心系列 功能、指令级接口技术要求 IP城域、骨干_0915'
 # file_name = r'7-中国电信新一代云网运营业务系统技术规范集 采控中心系列 功能、指令级接口技术要求IP新型城域网0922'
 # file_name = r'7-中国电信新一代云网运营业务系统技术规范集 采控中心系列 功能、指令级接口技术要求IP新型城域网0922'
-file_name = r'11-中国电信新一代云网运营业务系统技术规范集 采控中心系列 功能、指令级接口技术要求 IPRAN STN --20220907 v1.0'
+# file_name = r'11-中国电信新一代云网运营业务系统技术规范集 采控中心系列 功能、指令级接口技术要求 IPRAN STN --20220907 v1.0'
+# file_name = r'中国电信新一代云网运营业务系统采控中心技术要求 5GC 功能、指令级接口-20231215'
+file_name = r'2024-01-11中国电信新一代云网运营业务系统采控中心技术要求-IP新城 功能、指令级接口'
 
-path = f'C:\\Users\\heave\\Desktop\\DeskTop\\考核相关专业api\\{file_name}' + '.docx'
+# path = f'C:\\Users\\heave\\Desktop\\DeskTop\\考核相关专业api\\{file_name}' + '.docx'
+# path = f'C:\\Users\\heave\\Desktop\\{file_name}' + '.docx'
+path = f'C:\\Users\\heave\\Desktop\\mysource\\0919规范收集-word转excel\\{file_name}' + '.docx'
+
 # path = f'./download/{file_name}' + '.docx'
 obj = Document(path)
 
@@ -22,7 +27,7 @@ def for_paragraphs():
         index += 1
         title = content.style.name
         name = content.text
-        line_spacing = content.paragraph_format.line_spacing
+        # line_spacing = content.paragraph_format.line_spacing
         # if line_spacing == 1.5:
         #     print(f'{name}')
         # if name == '接口名称' and not str(title).startswith('Heading') and not str(title).endswith('标题'):
@@ -36,8 +41,8 @@ def for_paragraphs():
         #     print(f'{name}')
 
         # count = get_error_title(title, name, count, index)
-        count = get_interface_name(title, name, index,count, obj.paragraphs)
-        # count = get_all_title(title, name, count, index, obj.paragraphs)
+        # count = get_interface_name(title, name, index,count, obj.paragraphs)
+        count = get_all_title(title, name, count, index, obj.paragraphs)
 
         # print(title)
         # if name == '接口名称':
@@ -74,7 +79,10 @@ def get_interface_name(title, name, index, count, content):
 def get_error_title(title, name, count, index):
     api_name = '接口名称'
     # api_name = '接口访问方法'
-    if str(name).__contains__(api_name) and str(name).strip() != api_name and (
+    print(f'=={name}')
+    if str(name).strip() == '':
+        return count
+    if str(api_name).__contains__(str(name)) and str(name).strip() != api_name and (
             str(title).startswith('Heading') or str(title).endswith('标题')):
         print(f'{obj.paragraphs[index].text}')
         count += 1
@@ -83,10 +91,15 @@ def get_error_title(title, name, count, index):
 
 # 获取所有标题
 def get_all_title(title, name, count, index, content):
-    if name == '接口名称':
+    # 1373
+    # header = "接口名称"
+    header = "接口访问方法"
+    # if name == header and (str(title).startswith('Heading') or str(title).endswith('标题')):
+    if name == header:
+        # print(f'{str}')
         count += 1
-        value = content[index].text
-        print(f'{value}')
+        # value = content[index].text
+        # print(f'{value}')
     return count
 
 

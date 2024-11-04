@@ -49,7 +49,7 @@ def ip_judge():
     # 必须先转成int类型 列表 否则找不出最大最小值
     value = value.split(".")
 
-    if  value[-1] == '0':
+    if value[-1] == '0':
         return 'NO'
 
     if len(value) != 4:

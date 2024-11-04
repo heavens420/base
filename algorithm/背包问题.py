@@ -45,6 +45,7 @@ def get_max2():
                 dp[i][j] = dp[i - 1][j]
             else:
                 dp[i][j] = max(dp[i - 1][j], dp[i - 1][j - w[i - 1]] + v[i - 1])
+                print(f'i={i},j={j},dp={dp[i][j]}')
 
     print('-' * 30)
     for it in dp:

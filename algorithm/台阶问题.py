@@ -61,6 +61,18 @@ def get_num3(n):
     return temp
 
 
+# 传统动态规划
+def get_num4():
+    dp = [0 for _ in range(n+1)]
+    for i in range(1, n + 1):
+        if i <= 2:
+            dp[i] = i
+        else:
+            dp[i] = dp[i - 1] + dp[i-2]
+    print(dp)
+    return dp[n]
+
+
 if __name__ == '__main__':
     while 1:
         try:
@@ -69,5 +81,7 @@ if __name__ == '__main__':
             # print(get_num(n))
             # print(get_num2(n, di))
             print(get_num3(n))
-        except Exception:
+            print(get_num4())
+        except Exception as e:
+            print(e)
             break

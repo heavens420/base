@@ -5,14 +5,14 @@
 import pandas as pd
 from sqlalchemy import create_engine
 
-table_name = 'cmp_opt_alarm'
-schema = 'gc_cmp'
+table_name = 'ee_order_wlw_terminal_test'
+schema = 'idc_cloud'
 sql = f"select * from {schema}.{table_name};"
 
 
 def get_connect():
-    engine = create_engine('mysql+pymysql://root:devop#0626@192.168.81.149:3306/gc_cmp')
-    res = pd.read_sql_query(sql, engine)
+    engine = create_engine('mysql+pymysql://root:mysql2015@192.168.80.169:3306/idc_cloud?charset=utf8')
+    res = pd.read_sql(sql, engine)
     # print(list(res))
     # print(res.values)
     return list(res), res
@@ -92,8 +92,10 @@ def query_sql():
 
 
 if __name__ == '__main__':
-    insert_sql()
+    # insert_sql()
     print('-' * 100)
     # update_sql()
     # get_data_type()
-    # query_sql()
+    query_sql()
+    # aa,_ = get_connect()
+    # print(aa)

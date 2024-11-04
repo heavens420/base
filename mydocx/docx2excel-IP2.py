@@ -17,14 +17,29 @@ from openpyxl.utils import get_column_letter
 # file_name = r'中国电信新一代云网运营业务系统技术规范集-采控中心接口系列-服务级接口技术要求 IP城域、骨干_0915'
 # file_name = r'2-中国电信新一代云网运营业务系统技术规范集 采控中心系列 功能、指令级接口技术要求 传输网（CD级）-20220914.1'
 
-# file_name = r'1-中国电信新一代云网运营业务系统采控中心服务级接口技术要求 传输网（B级）-20221017.1版本-20221026更新 - 20221214格式调整(1)'
+# file_name = r'中国电信新一代云网运营业务系统采控中心接口服务级接口技术要求 IP城域、骨干_20230418'
+# file_name = r'8中国电信新一代云网运营业务系统技术规范集 采控中心系列 功能、指令级接口技术要求 IP城域、骨干'
+# file_name = r'中国电信新一代云网运营业务系统采控中心接口服务级接口技术要求 IP城域、骨干_20230418'
+# file_name = r'中国电信新一代云网运营业务系统采控中心服务级接口技术要求 IP城域、骨干_20230823'
+# file_name = r'中国电信新一代云网运营业务系统采控中心功能、指令级接口技术要求 IP城域、骨干_20230912（含附录C）'
+# file_name = r'中国电信新一代云网运营业务系统技术规范集 采控中心系列 服务级接口技术要求 云0810 -自研虚拟化(1)'
+# file_name = r'中国电信新一代云网运营业务系统采控中心技术要求 5GC 服务级接口 -20221222'
+# file_name = r'中国电信新一代云网运营业务系统采控中心技术要求 5GC 功能、指令级接口-20220525-20230625 - 20230910(1)'
+# file_name = r'中国电信新一代云网运营业务系统采控中心技术要求 5GC 功能、指令级接口-20231215'
 # file_name = r'2-中国电信新一代云网运营业务系统采控中心功能、指令级接口技术要求 传输网（CD级）-20221017.1版本-20221026更新 - 20221214格式调整'
-file_name = r'3-中国电信新一代云网运营业务系统采控中心功能、指令级接口技术要求 无线网-1013'
+# file_name = r'3-中国电信新一代云网运营业务系统采控中心功能、指令级接口技术要求 无线网-1013'
 # file_name = r'4-中国电信新一代云网运营业务系统采控中心技术要求 5GC 服务级接口 -20221222'
 # file_name = r'5-中国电信新一代云网运营业务系统采控中心技术要求 5GC 功能、指令级接口-20221219'
 
+# file_name = r'2024-01-11中国电信新一代云网运营业务系统采控中心技术要求-IP新城 服务级接口'
+file_name = r'2024-01-11中国电信新一代云网运营业务系统采控中心技术要求-IP新城 功能、指令级接口'
 # path = f'C:\\Users\\heave\\Desktop\\DeskTop\\考核相关专业api\\{file_name}' + '.docx'
-path = f'C:\\Users\\heave\\Desktop\\DeskTop\\word转excel\\20230111\\{file_name}' + '.docx'
+path = f'C:\\Users\\heave\\Desktop\\mysource\\0919规范收集-word转excel\\{file_name}' + '.docx'
+# path = f'C:\\Users\\heave\\Desktop\\{file_name}' + '.docx'
+'''
+    pip install python-docx
+    pip install openpyxl
+'''
 
 
 # 创建docx对象
@@ -131,8 +146,8 @@ def read_tables() -> list:
 
 # 判断表头是否满足要求
 def judge_table(table) -> bool:
-    template = ['入参/出参', '参数位置', '参数名称', '参数编码', '参数类型（string等）', '参数类型(string等)', '参数类型(string等）',
-                '参数约束（必填m、可选o、条件可选c）','参数约束(必填m,可选o,条件可选c)','参数约束（必m、可选o、条件可选c）', '参数说明（含字典值等）']
+    template = ['入参/出参','回参/出参','入参/回参','回参/回参','回参', '参数位置', '参数名称', '参数编码', '参数类型（string等）', '参数类型(string等)', '参数类型(string等）',
+                '参数约束（必填m、可选o、条件可选c）', '参数约束(必填m,可选o,条件可选c)', '参数约束（必m、可选o、条件可选c）', '参数说明（含字典值等）']
     template2 = ['出入参类型', '参数名称', '参数编码', '新旧值', '参数类型', '参数约束', '参数说明(含字典值等)', '默认值', '参数示例', '备注', '']
     col_len = len(table.columns)
     if col_len < 6:
@@ -146,15 +161,21 @@ def judge_table(table) -> bool:
         #     for_table(table)
         #     print('-' * 100)
         if cell in template or cell in template2:
-            # if len(table.columns) < 6:
-            #     print(f'不合规表头具体项：{cell},列宽：{col_len}')
+            if len(table.columns) < 6:
+                print(f'不合规表头具体项：{cell},列宽：{col_len}')
+                for_table(table)
+                return False
+
             #     print('#' * 100)
             #     for_table(table)
             #     print('-1' * 100)
             #     print('-2' * 100)
             #     print('-3' * 100)
             #     print('-4' * 100)
-            pass
+            elif table.cell(0, 0).text == table.cell(0, 1).text == table.cell(0, 2).text == '':
+                return False
+            else:
+                return True
         else:
             if len(table.columns) >= 6:
                 print(f'不合规表头具体项：{cell},列宽：{col_len}')
@@ -203,7 +224,8 @@ def read_doc() -> list:
             if name == 'BGP-LS配置查询':
                 pass
             # api功能简述
-            if pa_type.endswith('标题') or pa_type.startswith('Heading') or line_spacing == 1.5:
+            if pa_type.endswith('标题') or pa_type.startswith('Heading') or line_spacing == 1.5 or pa_type.startswith(
+                    'List'):
                 if name != flag_interface_name:
                     pre_name = name
                     continue
@@ -264,7 +286,7 @@ def read_doc() -> list:
                     row_list.append(method_name)
                     row_list.append(uri_name)
             # 五个参数俱全 满足返回要求
-            if len(row_list) == 5:
+            if len(row_list) >= 5:
                 row_list[0], row_list[2] = row_list[2], row_list[0]
                 doc_list.append(row_list)
         except StopIteration as e:
@@ -305,6 +327,7 @@ def write_head_title(ws):
 def merge_doc_table():
     wb, ws = get_openpyxl_obj()
     write_head_title(ws)
+    count = 0
 
     doc_list = read_doc()
     # for kk in doc_list:
@@ -321,11 +344,15 @@ def merge_doc_table():
         try:
             table = tables_list[i]
             write_doc = True
+
             # 没有表格参数 但是doc还是得写
             if len(table) == 0:
                 row_number += 1
                 for s in range(5):
-                    ws.cell(row_number, s + 1, doc_list[i][s])
+                    try:
+                        ws.cell(row_number, s + 1, doc_list[i][s])
+                    except Exception as e:
+                        print(f'{e},{doc_list[i]},i={i},s={s}')
 
             # 根据表格参数写 表格数据和doc数据
             for k in range(len(table)):
@@ -333,17 +360,27 @@ def merge_doc_table():
                 if write_doc:
                     # 1-5列
                     for s in range(5):
-                        ws.cell(row_number, s + 1, doc_list[i][s])
+                        try:
+                            ws.cell(row_number, s + 1, doc_list[i][s])
+                        except Exception as e:
+                            print(f'{e},{doc_list[i]},i={i},s={s}')
+
                 # 6-11列
                 for j in range(6, len(table[k]) + 6):
-                    write_doc = False
-                    ws.cell(row_number, j, table[k][j - 6])
+                    try:
+                        write_doc = False
+                        ws.cell(row_number, j, table[k][j - 6])
+                    except Exception as e:
+                        print(f'i = {i},j = {j} 表格数据异常' + '-' * 30, e)
+                        for_list(table)
         except Exception as e:
-            print('表格数据异常' + '-' * 100)
-            for_list(table)
+            count += 1
+            # print('表格数据异常' + '-' * 30, e)
+            # for_list(table)
 
     wb.save(f'./download/{file_name}.xlsx')
     wb.close()
+    print(f'表格数据异常个数：{count}')
 
 
 def test_iter():
@@ -384,6 +421,7 @@ def format_title(doc, content, level='5'):
 
 
 # 修改文档所有不合规标题
+# 暂不可用
 def for_paragraphs():
     doc = get_docx_obj()
     line = doc.paragraphs
@@ -407,10 +445,42 @@ def for_paragraphs():
     doc.save(f'./download/{file_name}-new.docx')
 
 
+def get_all_number():
+    doc = Document(path)
+    for p in doc.paragraphs:
+        # 获取numId
+        # print('numId', p._element.pPr.numPr.numId.val, end='  ')
+        # print('numId', p._element.pPr.numPr, end='  ')
+        # num_pr = p._p.pPr.numPr
+        # print(num_pr)
+        if p.text == '认证及获取令牌':
+            st = p.style
+            print(st)
+
+        if p.style.name.startswith('List'):
+            # if p is not None and p.run is not None:
+            #     print(f'no: {p.run[0].text}')
+            # else:
+            #     pass
+            # print(f'no2: {p.runs}')
+
+            # 获取ilvl的值，注意纯文本段落没有ilvl，其ilvl是None
+            # try:
+            #     print('ilvl', p._element.pPr.numPr.ilvl.val, end='  ')
+            # except AttributeError:
+            #     print('ilvl', p._element.pPr.numPr.ilvl, end='  ')
+            # 获取每个段落的文本信息
+            print('text', p.text)
+
+
 if __name__ == '__main__':
     # read_paragraphs()
     # read_normal()
-    # read_tables()
+    # lst = read_tables()
+    # for t in lst:
+    #     print(t)
     # read_title()
     merge_doc_table()
     # for_paragraphs()
+
+    # get_all_number()
